@@ -1,0 +1,20 @@
+#119.96 ms
+
+let add = func(int x, int y) int
+{
+    x + y
+}
+
+let a = 10
+let b = "Some String"
+let c = 'c'
+
+let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+let numbers = append(numbers, 0)
+
+let numbers =
+    foreach i 0..9
+        i
+
+type byte =
+    int 0..255

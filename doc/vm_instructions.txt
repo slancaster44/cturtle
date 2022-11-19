@@ -1,0 +1,41 @@
+
+Registers:
+    r0-r11: General Purpose Registers
+    Flags: zero, carry, sign
+    PC: program counter
+    SP: stack pointer
+    FP: frame pointer
+
+Load Instructions
+    ld <register>, <register>
+    ld <register>, <immediate>
+    ld <register>, (<immediate>)
+    ld <register>, (<register>)
+    ld (<register>), <register>
+    ld (<immediate>), <register>
+
+Arithmetic Instructions
+    add
+    adc
+    sub
+    sbc
+    mul
+    div
+    or
+    xor
+    and
+    sl
+    sr
+    rr
+    rl
+
+Control Flow Instructions
+    jp <immediate>
+    call <immediate>
+
+Flags Register Control:
+    set z | c | s
+    clr z | c | s
+
+Instruction Format:
+    <opcode byte> <arguments>

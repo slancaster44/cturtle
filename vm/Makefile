@@ -1,0 +1,26 @@
+ 
+CXX := gcc
+CXXFLAGS := -g -masm=intel -O3
+
+TARGET_NAME := tvm
+
+SRC := vm.c 
+HDR := 
+
+CLEAN_LIST := $(TARGET_NAME) $(*.o) $(*.gch)
+
+default:
+	$(CXX) $(CXXFLAGS) $(HDR) $(SRC) main.c -o $(TARGET_NAME)
+
+clean:
+	rm -f $(CLEAN_LIST)
+
+build_test:
+	$(CXX) $(CXXFLAGS) $(HDR) $(SRC) test.c -o $(TARGET_NAME)
+
+test:
+	make build_test
+	@echo ""
+	./$(TARGET_NAME) 
+	@make -s clean
+
