@@ -14,16 +14,14 @@ static inline word getWordImm();
 static inline qword getQwordImm();
 
 void Execute(byte* code, int code_length) {
-    struct VM vm;
-    
-    vm.code = new_array(byte, code_length);
-    memcpy(vm.code, code, code_length);
+    CB = new_array(byte, code_length);
+    memcpy(CB, code, code_length);
 
-    vm.stack = new_array(byte, 0);
+    SB = new_array(byte, 0);
 
-    vm.codelen = code_length;
+    codelen = code_length;
 
-    PC = vm.code;
+    PC = CB;
 
     enum Opcode curOpcode;
     while (1) {
@@ -47,12 +45,6 @@ void Execute(byte* code, int code_length) {
             case ADD_B_A:
                 Add_B_A();
                 break;
-            case ADD_A_A:
-                Add_A_A();
-                break;
-            case ADD_B_B:
-                Add_B_B();
-                break;
             case ADD_A_IMM:
                 Add_A_Imm(getQwordImm());
                 break;
@@ -72,31 +64,31 @@ void Execute(byte* code, int code_length) {
                 And_B_Imm(getQwordImm());
                 break;
             case SL_A_IMM:
-                Asl_A_Imm(getByteImm());
+                Sl_A_Imm(getByteImm());
                 break;
             case SL_B_IMM:
-                Asl_B_Imm(getByteImm());
+                Sl_B_Imm(getByteImm());
                 break;
             case SR_A_IMM:
-                Asr_A_Imm(getByteImm());
+                Sr_A_Imm(getByteImm());
                 break;
             case SR_B_IMM:
-                Asr_B_Imm(getByteImm());
+                Sr_B_Imm(getByteImm());
                 break;
             case BUILTIN:
-                HandleBuiltin(&vm,getByteImm());
+                HandleBuiltin(getByteImm());
                 break;
             case ALLOC_IMM:
-                Alloc(&vm, getQwordImm());
+                Alloc(getQwordImm());
                 break;
             case ALLOC_A:
-                Alloc(&vm, REG_A);
+                Alloc(REG_A);
                 break;
             case ALLOC_B:
-                Alloc(&vm, REG_B);
+                Alloc(REG_B);
                 break;
             case DEALLOC:
-                free(vm.bp);
+                free(BP);
                 break;
             case EXIT:
                 goto exit;
@@ -107,8 +99,8 @@ void Execute(byte* code, int code_length) {
     }
 
     exit:
-        free(vm.code);
-        free(vm.stack);
+        free(CB);
+        free(SB);
 }
 
 static inline word getWordImm() {
@@ -147,14 +139,6 @@ static inline void Add_B_A() {
     REG_B += REG_A;
 }
 
-static inline void Add_A_A() {
-    REG_A += REG_A;
-}
-
-static inline void Add_B_B() {
-    REG_B += REG_B;
-}
-
 static inline void Add_A_Imm(qword imm) {
     REG_A += imm;
 }
@@ -187,42 +171,42 @@ static inline void Inv_B() {
     REG_B = ~REG_B;
 }
 
-static inline void Asl_A_Imm(byte imm) {
+static inline void Sl_A_Imm(byte imm) {
     REG_A = REG_A << imm;
 }
 
-static inline void Asl_B_Imm(byte imm) {
+static inline void Sl_B_Imm(byte imm) {
     REG_B = REG_B << imm;
 }
 
-static inline void Asr_A_Imm(byte imm) {
+static inline void Sr_A_Imm(byte imm) {
     REG_A = REG_A >> imm;
 }
 
-static inline void Asr_B_Imm(byte imm) {
+static inline void Sr_B_Imm(byte imm) {
     REG_B = REG_B >> imm;
 }
 
-static inline void Alloc(struct VM* vm, qword size) {
-    vm->bp = new_array(byte, size);
+static inline void Alloc(qword size) {
+    BP = new_array(byte, size);
 }
 
-static inline void HandleBuiltin(struct VM* vm, byte imm) {
+static inline void HandleBuiltin(byte imm) {
     switch (imm) {
     case PRINT_ASCII_A:
-        printf("%c", REG_A);
+        printf("%c", (char) REG_A);
         break;
     case PRINT_HEX_A:
-        printf("0x%X", REG_A);
+        printf("0x%llX", (qword) REG_A);
         break;
     case PRINT_ASCII_B:
-        printf("%c", REG_B);
+        printf("%c", (char) REG_B);
         break;
     case PRINT_HEX_B:
-        printf("0x%X", REG_B);
+        printf("0x%llX", (qword) REG_B);
         break;
     case DUMP_REGS:
-        printRegs(vm);
+        printRegs();
         break;
     default:
         printf("Unrecognized Builtin Call %d", imm);
@@ -230,8 +214,9 @@ static inline void HandleBuiltin(struct VM* vm, byte imm) {
     }
 }
 
-void printRegs(struct VM* vm) {
+void printRegs() {
     printf("\nRegisters:\n");
     printf("A:   0x%llx\nB:   0x%llx\n", REG_A, REG_B);
-    printf("SP:  0x%llx\nPC:  0x%llx\n", vm->sp, PC);
+    printf("SP:  0x%llx\nPC:  0x%llx\n", (qword) SP, (qword) PC);
+    printf("FO:  0x%llx\nBP:  0x%llx\n", (qword) FO, (qword) BP);
 }

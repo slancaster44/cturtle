@@ -1,41 +1,32 @@
+Load Group:
+    lda <immediate64>
+    ldb <immediate64>
 
-Registers:
-    r0-r11: General Purpose Registers
-    Flags: zero, carry, sign
-    PC: program counter
-    SP: stack pointer
-    FP: frame pointer
+    lda b
+    ldb a
 
-Load Instructions
-    ld <register>, <register>
-    ld <register>, <immediate>
-    ld <register>, (<immediate>)
-    ld <register>, (<register>)
-    ld (<register>), <register>
-    ld (<immediate>), <register>
+    lda (bp + <offset64>)
+    lda (sp + <offset64>)
+    lda (sp - <offset64>)
+    lda (fo + <offset64>)
+    lda (fo - <offset64>)
 
-Arithmetic Instructions
-    add
-    adc
-    sub
-    sbc
-    mul
-    div
-    or
-    xor
-    and
-    sl
-    sr
-    rr
-    rl
+    ldb (bp + <offset64>)
+    ldb (sp + <offset64>)
+    ldb (sp - <offset64>)
+    ldb (fo + <offset64>)
+    ldb (fo - <offset64>)
 
-Control Flow Instructions
-    jp <immediate>
-    call <immediate>
+    ldbp 
 
-Flags Register Control:
-    set z | c | s
-    clr z | c | s
+    ldm (bp + <offset64>), a
+    ldm (sp + <offset64>), a
+    ldm (sp - <offset64>), a
+    ldm (fo + <offset64>), a
+    ldm (fo - <offset64>), a
 
-Instruction Format:
-    <opcode byte> <arguments>
+    ldm (bp + <offset64>), b
+    ldm (sp + <offset64>), b
+    ldm (sp - <offset64>), b
+    ldm (fo + <offset64>), b
+    ldm (fo - <offset64>), b

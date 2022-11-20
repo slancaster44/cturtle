@@ -1,0 +1,50 @@
+Primative Types:
+    Integer: int
+    Float: flt
+    Char: chr
+
+Compound Types:
+    String: str
+    List: lst{contained_type}
+    Record: rec{type id, type id}
+
+Let Statement:
+    let <ident> = <expression>
+
+Blocks:
+    Unscoped:   { <expression> .... <expression> }
+    Scoped: do { <expresion> .... <expresion> }
+
+Functions:
+    func(<type> <id>, ... )
+        <expression>
+
+    Recursion:
+        Because all functions are
+        anonymous, the 'recurse' id
+        will be assigned to the current
+        function
+
+    Example:
+        let fib = func(int n) int
+            if n <= 1
+                1
+            else
+                recurse(n - 1) + recurse(n - 2)
+
+User Defined Types:
+    type <ident> = <definition>
+
+    Alias:
+
+    Range:
+
+Records:
+    type person = rec {
+        str name,
+        int age
+    }
+
+    let getJohn = func() {
+        let thisPerson = person()
+    }

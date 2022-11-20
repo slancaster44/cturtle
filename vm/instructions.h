@@ -10,7 +10,6 @@ enum Opcode {
     LDA_B,          /* A <- B */
     LDB_A,          /* B <- A */
 
-    /* ==== Unimplemented ==== */
     LDA_BP_OFF,      /* A <- (BP + Offset64) */
     LDA_SP_OFF ,     /* A <- (SP + Offset64) */
     LDA_SP_NOFF,     /* A <- (SP - Offset64) */
@@ -23,17 +22,17 @@ enum Opcode {
     LDB_FO_OFF,      /* B <- (SB + FO + Offset64) */
     LDB_FO_NOFF,     /* B <- (SB + FO - Offset64) */
 
-    LD_BP_OFF_A,    /* (BP + Offset64) <- A */
-    LD_SP_OFF_A,    /* (SP + Offset64) <- A */
-    LD_SP_NOFF_A,   /* (SP - Offset64) <- A */
-    LD_FO_OFF_A,    /* (SP + FO + Offset64) <- A */
-    LD_FO_NOFF_A,   /* (SP - FO + Offset64) <- A */
+    LDM_BPOFF_A,    /* (BP + Offset64) <- A */
+    LDM_SPOFF_A,    /* (SP + Offset64) <- A */
+    LDM_SPNOFF_A,   /* (SP - Offset64) <- A */
+    LDM_FOOFF_A,    /* (SP + FO + Offset64) <- A */
+    LDM_FONOFF_A,   /* (SP - FO + Offset64) <- A */
 
-    LD_BP_OFF_B,    /* (BP + Offset64) <- B */
-    LD_SP_OFF_B,    /* (SP + Offset64) <- B */
-    LD_SP_NOFF_B,   /* (SP - Offset64) <- B */
-    LD_FO_OFF_B,    /* (SP + FO + Offset64) <- B */
-    LD_FO_NOFF_B,   /* (SP - FO + Offset64) <- B */
+    LDM_BPOFF_B,    /* (BP + Offset64) <- B */
+    LDM_SPOFF_B,    /* (SP + Offset64) <- B */
+    LDM_SPNOFF_B,   /* (SP - Offset64) <- B */
+    LDM_FOOFF_B,    /* (SP + FO + Offset64) <- B */
+    LDM_FONOFF_B,   /* (SP - FO + Offset64) <- B */
 
     LDBP_FO_OFF,     /* BP <- (SB + FO + Offset64) */
     LDBP_FO_NOFF,    /* BP <- (SB + FO - Offset64) */
@@ -45,6 +44,10 @@ enum Opcode {
     SUB_SP_IMM,      /* SP <- SP - Immediate64 */
     SUB_SP_B,        /* SP <- SP - B */
     SUB_SP_A,        /* SP <- SP - A */
+
+    ADD_SP_IMM,     /* SP <- SP + Immediate64 */
+    ADD_SP_B,       /* SP <- SP + B */
+    ADD_SB_A,       /* SP <- SP + A */
     
     PUSH_FO,         /* (SP) <- FO; SP++ */
     PUSH_IMM,        /* (SP) <- Immediate64; SP++ */
@@ -55,7 +58,6 @@ enum Opcode {
     POP_B,           /* SP--; B <- (SP)  */
     POP_BP,          /* SP--; BP <- (SP) */
     POP_FO,          /* SP--; FO <- (SP) */
-    /* ^^^^^ Unimplemented ^^^^^ */
     
     AND_A_B,        /* A <- A & B */
     AND_B_A,        /* B <- A & B */
@@ -66,7 +68,7 @@ enum Opcode {
     SL_B_IMM,      /* B <- B << Immediate8 */
     SR_A_IMM,      /* A <- A >> Immediate8 */
     SR_B_IMM,      /* B <- A >> Immediate8 */
-    RL_A_IMM,
+    RL_A_IMM, 
     RL_B_IMM,
     RR_A_IMM,
     RR_B_IMM,
@@ -74,15 +76,15 @@ enum Opcode {
     INVA,           /* A <- !A */
     INVB,           /* B <- !B */
 
-    LT_A_B,
-    LT_B_A,
-    LT_A_IMM,
-    LT_B_IMM,
+    LT_A_B,     /* A <- A < B */
+    LT_B_A,     /* B <- B < A */
+    LT_A_IMM,   /* A <- A < Immediate64 */
+    LT_B_IMM,   /* B <- B < Immediate64 */
     
-    GT_A_B,
-    GT_B_A,
-    GT_A_IMM,
-    GT_B_IMM,
+    GT_A_B,     /* A <- A > B */
+    GT_B_A,     /* B <- B > A */
+    GT_A_IMM,   /* A <- A > Immediate64 */
+    GT_B_IMM,   /* B <- B > Immediate64 */
 
     LE_A_B,
     LE_B_A,
@@ -129,10 +131,10 @@ enum Opcode {
     MUL_A_IMM,
     MUL_B_IMM,
 
-    SQR_A_B,
-    SQR_B_A,
-    SQR_A_IMM,
-    SQR_B_IMM,
+    POW_A_B,
+    POW_B_A,
+    POW_A_IMM,
+    POW_B_IMM,
 
     DIV_A_B,
     DIV_B_A,
@@ -140,10 +142,10 @@ enum Opcode {
     DIV_B_IMM,
 
 
-    JPA_ADDR,       /* if (A != 0): PC <- Address64 */
-    JPB_ADDR,       /* if (B != 0): PC <- Address64 */
-    JP_ADDR,        /* PC <- Address64 */
-    CALL_ADDR,      /* push PC; PC <- Address64 */
+    JPA_OFF,       /* if (A != 0): PC <- CB + Offset64 */
+    JPB_OFF,       /* if (B != 0): PC <- CB + Offset64 */
+    JP_OFF,        /* PC <- CB + Offset64 */
+    CALL_OFF,      /* push PC; PC <- CB + Offset64 */
     RET,            /* pop PC */
 
     BUILTIN,        /* Execute Builtin Call #Immediate8 */
