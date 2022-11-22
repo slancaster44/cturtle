@@ -11,24 +11,28 @@ enum Opcode {
     LDB_A,          /* B <- A */
 
     LDA_BP_OFF,      /* A <- (BP + Offset64) */
+    LDA_BPOFF_B,     /* A <- (BP + B) */
     LDA_SP_OFF ,     /* A <- (SP + Offset64) */
     LDA_SP_NOFF,     /* A <- (SP - Offset64) */
     LDA_FO_OFF,      /* A <- (SB + FO + Offset64) */
     LDA_FO_NOFF,     /* A <- (SB + FO - Offset64) */
 
     LDB_BP_OFF,      /* B <- (BP + Offset64) */
+    LDB_BPOFF_A,     /* B <- (BP + A) */
     LDB_SP_OFF,      /* B <- (SP + Offset64) */
     LDB_SP_NOFF,     /* B <- (SP - Offset64) */
     LDB_FO_OFF,      /* B <- (SB + FO + Offset64) */
     LDB_FO_NOFF,     /* B <- (SB + FO - Offset64) */
 
     LDM_BPOFF_A,    /* (BP + Offset64) <- A */
+    LDM_BPOFFB_A,   /* (BP + B) <- A */
     LDM_SPOFF_A,    /* (SP + Offset64) <- A */
     LDM_SPNOFF_A,   /* (SP - Offset64) <- A */
     LDM_FOOFF_A,    /* (SP + FO + Offset64) <- A */
     LDM_FONOFF_A,   /* (SP - FO + Offset64) <- A */
 
     LDM_BPOFF_B,    /* (BP + Offset64) <- B */
+    LDM_BPOFFA_B,   /* (BP + A) <- B */
     LDM_SPOFF_B,    /* (SP + Offset64) <- B */
     LDM_SPNOFF_B,   /* (SP - Offset64) <- B */
     LDM_FOOFF_B,    /* (SP + FO + Offset64) <- B */
@@ -144,9 +148,13 @@ enum Opcode {
 
     JPA_OFF,       /* if (A != 0): PC <- CB + Offset64 */
     JPB_OFF,       /* if (B != 0): PC <- CB + Offset64 */
+    JPA_NZ_OFF,
+    JPB_NZ_OFF,
+    JPB_Z_OFF,
+    JPA_Z_OFF,
     JP_OFF,        /* PC <- CB + Offset64 */
     CALL_OFF,      /* push PC; PC <- CB + Offset64 */
-    RET,            /* pop PC */
+    RET,           /* pop PC */
 
     BUILTIN,        /* Execute Builtin Call #Immediate8 */
 

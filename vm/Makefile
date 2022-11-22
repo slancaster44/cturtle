@@ -1,6 +1,6 @@
  
 CXX := gcc
-CXXFLAGS := -g -O3
+CXXFLAGS := -g -O3 -lm
 
 TARGET_NAME := tvm
 
