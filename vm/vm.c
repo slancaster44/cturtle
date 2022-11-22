@@ -15,7 +15,7 @@ void freeBP() { free(BP); }
 
 #define decodeFirstReg(VAL) VAL >> 4
 #define decodeSecondReg(VAL) VAL & 0b00001111
-#define INITIAL_STACK_SIZE 2
+#define INITIAL_stack_limit 2
 
 #define getByteImm() *(PC++)
 static inline word getWordImm();
@@ -25,8 +25,9 @@ void Execute(byte* code, int code_length) {
     CB = new_array(byte, code_length);
     memcpy(CB, code, code_length);
 
-    SB = new_array(qword, INITIAL_STACK_SIZE);
+    SB = new_array(qword, INITIAL_stack_limit);
     SP = SB;
+    stack_limit = INITIAL_stack_limit;
 
     codelen = code_length;
 
@@ -71,6 +72,27 @@ void Execute(byte* code, int code_length) {
                 break;
             case LDM_BPOFFB_A:
                 Ldm_BpOffB_A();
+                break;
+            case PUSH_IMM:
+                Push_Imm(getQwordImm());
+                break;
+            case POP_A:
+                Pop_A();
+                break;
+            case POP_B:
+                Pop_B();
+                break;
+            case PUSH_A:
+                Push_A();
+                break;
+            case PUSH_B:
+                Push_B();
+                break;
+            case PUSH_BP:
+                Push_Bp();
+                break;
+            case POP_BP:
+                Pop_Bp();
                 break;
             case ADD_A_B:
                 Add_A_B();
@@ -300,10 +322,54 @@ static inline qword getQwordImm() {
 
 void ensureStackAccomodations(int numQwords) {
     int diff = SP - SB;
-    if ((diff << 3) + numQwords > stack_size) {
-        expand_array(qword, SB, stack_size, stack_size *= 2);
+    if ((diff >> 3) + numQwords > stack_limit) {
+        resize_array(qword, SB, stack_limit, stack_limit+=stack_limit);
+        SP = SB + diff;
+    } else if ((diff >> 3) < (stack_limit >> 2) && 
+        stack_limit > INITIAL_stack_limit) {
+
+        resize_array(qword, SB, stack_limit, stack_limit >>= 1);
         SP = SB + diff;
     }
+}
+
+static inline void Push_Imm(qword imm) {
+    ensureStackAccomodations(1);
+    *SP = imm;
+    SP += sizeof(qword);
+}
+
+static inline void Push_A() {
+    ensureStackAccomodations(1);
+    *SP = REG_A;
+    SP += sizeof(qword);
+}
+
+static inline void Push_B() {
+    ensureStackAccomodations(1);
+    *SP = REG_B;
+    SP += sizeof(qword);
+}
+
+static inline void Pop_A() {
+    SP -= sizeof(qword);
+    REG_A = *SP;
+}
+
+static inline void Pop_B() {
+    SP -= sizeof(qword);
+    REG_B = *SP;
+}
+
+static inline void Push_Bp() {
+    ensureStackAccomodations(1);
+    *SP = (qword) BP;
+    SP += sizeof(qword);
+}
+
+static inline void Pop_Bp() {
+    SP -= sizeof(qword);
+    BP = (qword*) *SP;
 }
 
 static inline void Lda_Imm(qword imm) {

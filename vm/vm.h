@@ -18,7 +18,7 @@ static qword* BP;       /* Pointer to current buffer we are working on */
 static int codelen;
 static byte* CB; /* Starting address of code */
 
-static int stack_size; //In qwords
+static int stack_limit; //In qwords
 static qword* SB; /* Starting address of stack */
 
 /* Utility */
@@ -88,16 +88,16 @@ static inline void Add_Sp_Imm(qword imm);
 static inline void Add_Sp_A();
 static inline void Add_Sp_B();
 
-static inline void Push_Imm(qword imm);
+static inline void Push_Imm(qword imm); //FI SI
 static inline void Push_Fo();
-static inline void Push_Bp();
-static inline void Push_A();
-static inline void Push_A();
+static inline void Push_Bp(); //FI SI
+static inline void Push_A(); //FI SI
+static inline void Push_B(); //FI SI
 
 static inline void Pop_Fo();
-static inline void Pop_Sp();
-static inline void Pop_A();
-static inline void Pop_B();
+static inline void Pop_Bp(); //FI SI
+static inline void Pop_A(); //FI SI
+static inline void Pop_B(); //FI SI
 
 static inline void Alloc(qword size); //FI SI
 static inline void Dealloc(); //FI SI
