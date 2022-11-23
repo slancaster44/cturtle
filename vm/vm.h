@@ -24,6 +24,7 @@ static qword* SB; /* Starting address of stack */
 /* Utility */
 void Execute(byte* code, int code_length);
 void printRegs();
+void printStack();
 qword getA();
 qword getB();
 qword peakBp(qword off);
@@ -75,10 +76,6 @@ static inline void Ldbp_SpOff(qword offset);
 static inline void Ldbp_SpNoff(qword offset);
 
 static inline void Ldfo();
-
-static inline void Sub_Sp_Imm(qword imm);
-static inline void Sub_Sp_A();
-static inline void Sub_Sp_B();
 
 static inline void Sub_Sp_Imm(qword imm);
 static inline void Sub_Sp_A();
@@ -163,30 +160,30 @@ static inline void Eq_B_A(); //FI SI
 static inline void Eq_A_Imm(qword imm); //FI SI 
 static inline void Eq_B_Imm(qword imm); //FI SI 
 
-static inline void Ne_A_B();
-static inline void Ne_B_A();
-static inline void Ne_A_Imm(qword imm);
-static inline void Ne_B_Imm(qword imm);
+static inline void Ne_A_B(); //FI SI 
+static inline void Ne_B_A(); //FI SI 
+static inline void Ne_A_Imm(qword imm); //FI SI 
+static inline void Ne_B_Imm(qword imm); //FI SI 
 
-static inline void Gt_A_B();
-static inline void Gt_B_A();
-static inline void Gt_A_Imm(qword imm);
-static inline void Gt_B_Imm(qword imm);
+static inline void Gt_A_B(); //FI SI 
+static inline void Gt_B_A(); //FI SI 
+static inline void Gt_A_Imm(qword imm); //FI SI 
+static inline void Gt_B_Imm(qword imm); //FI SI 
 
-static inline void Lt_A_B();
-static inline void Lt_B_A();
-static inline void Lt_A_Imm(qword imm);
-static inline void Lt_B_Imm(qword imm);
+static inline void Lt_A_B(); //FI SI 
+static inline void Lt_B_A(); //FI SI 
+static inline void Lt_A_Imm(qword imm); //FI SI 
+static inline void Lt_B_Imm(qword imm); //FI SI 
 
-static inline void Ge_A_B();
-static inline void Ge_B_A();
-static inline void Ge_A_Imm(qword imm);
-static inline void Ge_B_Imm(qword imm);
+static inline void Ge_A_B(); //FI SI 
+static inline void Ge_B_A(); //FI SI 
+static inline void Ge_A_Imm(qword imm); //FI SI 
+static inline void Ge_B_Imm(qword imm); //FI SI 
 
-static inline void Le_A_B();
-static inline void Le_B_A();
-static inline void Le_A_Imm(qword imm);
-static inline void Le_B_Imm(qword imm);
+static inline void Le_A_B(); //FI SI 
+static inline void Le_B_A(); //FI SI 
+static inline void Le_A_Imm(qword imm); //FI SI 
+static inline void Le_B_Imm(qword imm); //FI SI 
 
 /* Control Flow Instructions */
 static inline void Jpa_Offset(qword off);

@@ -73,6 +73,18 @@ void Execute(byte* code, int code_length) {
             case LDM_BPOFFB_A:
                 Ldm_BpOffB_A();
                 break;
+            case ADD_SP_IMM:
+                Add_Sp_Imm(getQwordImm());
+                break;
+            case SUB_SP_IMM:
+                Sub_Sp_Imm(getQwordImm());
+                break;
+            case LDM_SPNOFF_A:
+                Ldm_SpNoff_A(getQwordImm());
+                break;
+            case LDB_SP_NOFF:
+                Ldb_SpNoff(getQwordImm());
+                break;
             case PUSH_IMM:
                 Push_Imm(getQwordImm());
                 break;
@@ -322,13 +334,15 @@ static inline qword getQwordImm() {
 
 void ensureStackAccomodations(int numQwords) {
     int diff = SP - SB;
-    if ((diff >> 3) + numQwords > stack_limit) {
-        resize_array(qword, SB, stack_limit, stack_limit+=stack_limit);
-        SP = SB + diff;
-    } else if ((diff >> 3) < (stack_limit >> 2) && 
-        stack_limit > INITIAL_stack_limit) {
+    int stack_used = (diff / sizeof(qword)) + numQwords;
 
-        resize_array(qword, SB, stack_limit, stack_limit >>= 1);
+    if (stack_used >= stack_limit) {
+        resize_array(qword, SB,  stack_limit, stack_limit *= 2);
+        SP = SB + diff;
+
+    } else if (stack_used < (stack_limit / 2) && stack_limit > INITIAL_stack_limit) {
+
+        resize_array(qword, SB, stack_limit, stack_limit /= 2);
         SP = SB + diff;
     }
 }
@@ -370,6 +384,23 @@ static inline void Push_Bp() {
 static inline void Pop_Bp() {
     SP -= sizeof(qword);
     BP = (qword*) *SP;
+}
+
+static inline void Add_Sp_Imm(qword imm) {
+    ensureStackAccomodations(imm);
+    SP += sizeof(qword) * imm;
+}
+
+static inline void Sub_Sp_Imm(qword imm) {
+    SP -= sizeof(qword) * imm;
+}
+
+static inline void Ldm_SpNoff_A(qword offset) {
+    *(SP - (offset * sizeof(qword))) = REG_A;
+}
+
+static inline void Ldb_SpNoff(qword offset) {
+    REG_B = *(SP - (offset * sizeof(qword)));
 }
 
 static inline void Lda_Imm(qword imm) {
@@ -715,4 +746,11 @@ void printRegs() {
     printf("A:   0x%llx\nB:   0x%llx\n", REG_A, REG_B);
     printf("SP:  0x%llx\nPC:  0x%llx\n", (qword) SP, (qword) PC);
     printf("FO:  0x%llx\nBP:  0x%llx\n", (qword) FO, (qword) BP);
+}
+
+void printStack() {
+    printf("Stack:\n");
+    for (qword* curPtr = SP; curPtr > SB; curPtr -= sizeof(qword)) {
+        printf("%llx: %llx\n", curPtr, *curPtr);
+    }
 }

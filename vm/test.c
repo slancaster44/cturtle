@@ -695,6 +695,7 @@ void testBufferPointer() {
 }
 
 void testStack() {
+    
     byte code[40] = {
         PUSH_IMM,
         list8bitImm(0x0F),
@@ -748,7 +749,24 @@ void testStack() {
     };
     Execute(code3, 40);
     assert(peakBp(0x0A) == 0x0D, "POP_BP, PUSH_BP");
-    freeBP();
+    freeBP(); 
+
+    /* Not woring */
+    byte code4[46] = {
+        ADD_SP_IMM,
+        list8bitImm(0x06),
+        LDA_IMM,
+        list8bitImm(0x0A),
+        LDM_SPNOFF_A,
+        list8bitImm(0x05),
+        LDB_SP_NOFF,
+        list8bitImm(0x05),
+        SUB_SP_IMM,
+        list8bitImm(0x04),
+        EXIT,
+    };
+    Execute(code4, 46);
+    assert(getB() == 0x0A, "ADD_SP_IMM, LDM_SPNOFF_A, LDB_SP_NOFF");
 }
 
 int main() {
