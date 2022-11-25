@@ -6,6 +6,8 @@
 #define RA 0
 #define RB 1
 
+
+
 void assert(int expr, char* name) {
     if (expr)
         printf("%s Passed\n", name);
@@ -466,7 +468,7 @@ void testMaths() {
         EXIT,
     };
     Execute(codeLE_B_IMM, 20);
-    assert(getB() == 0x00, "LE_B_IMM");
+    assert(getB() == 0x01, "LE_B_IMM");
 
 
     byte codeLE_A_IMM[20] = {
@@ -477,7 +479,7 @@ void testMaths() {
         EXIT,
     };
     Execute(codeLE_A_IMM, 20);
-    assert(getA() == 0x00, "LE_A_IMM");
+    assert(getA() == 0x01, "LE_A_IMM");
 
 
     byte codeGT_A_B[20] = {
@@ -713,6 +715,17 @@ void testStack() {
     Execute(code, 40);
     assert(getA() == 0x0F, "PUSH_IMM, POP_A");
 
+    byte codeOR_A_B[20] = {
+        LDA_IMM,
+        list8bitImm(0x01),
+        LDB_IMM,
+        list8bitImm(0x00),
+        OR_A_B,
+        EXIT,
+    };
+    Execute(codeOR_A_B, 20);
+    assert(getA() == 0x01, "OR_A_B");
+
     byte code1[12] = {
         LDA_IMM,
         list8bitImm(0x0E),
@@ -751,7 +764,6 @@ void testStack() {
     assert(peakBp(0x0A) == 0x0D, "POP_BP, PUSH_BP");
     freeBP(); 
 
-    /* Not woring */
     byte code4[46] = {
         ADD_SP_IMM,
         list8bitImm(0x06),
@@ -767,6 +779,191 @@ void testStack() {
     };
     Execute(code4, 46);
     assert(getB() == 0x0A, "ADD_SP_IMM, LDM_SPNOFF_A, LDB_SP_NOFF");
+
+    byte code5[46] = {
+        ADD_SP_IMM,
+        list8bitImm(0x06),
+        LDA_IMM,
+        list8bitImm(0x0A),
+        LDM_SPNOFF_B,
+        list8bitImm(0x05),
+        LDA_SP_NOFF,
+        list8bitImm(0x05),
+        SUB_SP_IMM,
+        list8bitImm(0x04),
+        EXIT,
+    };
+    Execute(code5, 46);
+    assert(getA() == 0x0A, "LDM_SPNOFF_B, LDA_SP_NOFF");
+
+    byte code6[48] = {
+        LDB_IMM,
+        list8bitImm(0x06),
+        ADD_SP_B,
+        LDA_IMM,
+        list8bitImm(0x0A),
+        LDM_SPNOFF_A,
+        list8bitImm(0x05),
+        LDA_IMM,
+        list8bitImm(0x00),
+        LDA_SP_NOFF,
+        list8bitImm(0x05),
+        SUB_SP_B,
+        EXIT,
+    };
+    Execute(code6, 48);
+    assert(getA() == 0x0A, "ADD_SP_B, SUB_SP_B");
+
+    byte code7[48] = {
+        LDB_IMM,
+        list8bitImm(0x06),
+        ADD_SP_A,
+        LDA_IMM,
+        list8bitImm(0x0A),
+        LDM_SPNOFF_A,
+        list8bitImm(0x05),
+        LDA_IMM,
+        list8bitImm(0x00),
+        LDA_SP_NOFF,
+        list8bitImm(0x05),
+        SUB_SP_A,
+        EXIT,
+    };
+    Execute(code7, 48);
+    assert(getA() == 0x0A, "ADD_SP_B, SUB_SP_B");
+
+    byte code8[47] = {
+        ADD_SP_IMM,
+        list8bitImm(0x03),
+        LDFO,
+        ADD_SP_IMM,
+        list8bitImm(0x03),
+        LDB_IMM,
+        list8bitImm(0x0D),
+        LDM_FOOFF_B,
+        list8bitImm(0x01),
+        LDA_FO_OFF,
+        list8bitImm(0x01),
+        EXIT,
+    };
+    Execute(code8, 47);
+    assert(getA() == 0x0D, "LDA_FOOFF, LDM_FOOFF_B");
+
+    byte code9[47] = {
+        ADD_SP_IMM,
+        list8bitImm(0x03),
+        LDFO,
+        ADD_SP_IMM,
+        list8bitImm(0x03),
+        LDA_IMM,
+        list8bitImm(0x0D),
+        LDM_FOOFF_A,
+        list8bitImm(0x01),
+        LDB_FO_OFF,
+        list8bitImm(0x01),
+        EXIT,
+    };
+    Execute(code9, 47);
+    assert(getB() == 0x0D, "LDB_FOOFF, LDM_FOOFF_A");
+
+    byte code10[47] = {
+        ADD_SP_IMM,
+        list8bitImm(0x03),
+        LDFO,
+        ADD_SP_IMM,
+        list8bitImm(0x03),
+        LDB_IMM,
+        list8bitImm(0x0D),
+        LDM_FONOFF_B,
+        list8bitImm(0x01),
+        LDA_FO_NOFF,
+        list8bitImm(0x01),
+        EXIT,
+    };
+    Execute(code10, 47);
+    assert(getA() == 0x0D, "LDA_FONOFF, LDM_FONOFF_B");
+
+    byte code11[47] = {
+        ADD_SP_IMM,
+        list8bitImm(0x03),
+        LDFO,
+        ADD_SP_IMM,
+        list8bitImm(0x03),
+        LDA_IMM,
+        list8bitImm(0x0D),
+        LDM_FONOFF_A,
+        list8bitImm(0x01),
+        LDB_FO_NOFF,
+        list8bitImm(0x01),
+        EXIT,
+    };
+    Execute(code11, 47);
+    assert(getB() == 0x0D, "LDB_FONOFF, LDM_FONOFF_A");
+}
+
+void testControl() {
+    byte code[28] = {
+        LDA_IMM,
+        list8bitImm(0x08),
+        JP_OFF,
+        list8bitImm(27),
+        LDA_IMM,
+        list8bitImm(0x09),
+        EXIT,
+    };
+    Execute(code, 28);
+    assert(getA() == 0x08, "JP_OFF");
+
+    byte code1[47] = {
+        LDA_IMM,
+        list8bitImm(0x08),
+        //Jump over subroutine
+        JP_OFF,
+        list8bitImm(28),
+        //Subroutine
+        LDA_IMM,
+        list8bitImm(0x09),
+        RET,
+
+        //Call Subroutine
+        CALL_OFF,
+        list8bitImm(18),
+
+        //Return and load B
+        LDB_IMM,
+        list8bitImm(0x0A),
+        EXIT,
+    };
+    Execute(code1, 47);
+    assert(getA() == 0x09 && getB() == 0x0A, "CALL, RET");
+
+    byte code2[37] = {
+        LDB_IMM,
+        list8bitImm(0x01),
+        LDA_IMM,
+        list8bitImm(0x08),
+        JPB_OFF,
+        list8bitImm(36),
+        LDA_IMM,
+        list8bitImm(0x09),
+        EXIT,
+    };
+    Execute(code2, 37);
+    assert(getA() == 0x08, "JPB_OFF");
+
+    byte code3[37] = {
+        LDA_IMM,
+        list8bitImm(0x01),
+        LDB_IMM,
+        list8bitImm(0x08),
+        JPA_OFF,
+        list8bitImm(36),
+        LDB_IMM,
+        list8bitImm(0x09),
+        EXIT,
+    };
+    Execute(code3, 37);
+    assert(getB() == 0x08, "JPA_OFF");
 }
 
 int main() {
@@ -789,5 +986,8 @@ int main() {
 
    // Execute(code, 28);
     testStack();
+    testControl();
+    testMaths();
+    testBufferPointer();
     return 0;
 }

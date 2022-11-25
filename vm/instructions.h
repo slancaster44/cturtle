@@ -12,36 +12,35 @@ enum Opcode {
 
     LDA_BP_OFF,      /* A <- (BP + Offset64) */
     LDA_BPOFF_B,     /* A <- (BP + B) */
-    LDA_SP_OFF ,     /* A <- (SP + Offset64) */
     LDA_SP_NOFF,     /* A <- (SP - Offset64) */
     LDA_FO_OFF,      /* A <- (SB + FO + Offset64) */
     LDA_FO_NOFF,     /* A <- (SB + FO - Offset64) */
 
     LDB_BP_OFF,      /* B <- (BP + Offset64) */
     LDB_BPOFF_A,     /* B <- (BP + A) */
-    LDB_SP_OFF,      /* B <- (SP + Offset64) */
     LDB_SP_NOFF,     /* B <- (SP - Offset64) */
     LDB_FO_OFF,      /* B <- (SB + FO + Offset64) */
     LDB_FO_NOFF,     /* B <- (SB + FO - Offset64) */
 
     LDM_BPOFF_A,    /* (BP + Offset64) <- A */
     LDM_BPOFFB_A,   /* (BP + B) <- A */
-    LDM_SPOFF_A,    /* (SP + Offset64) <- A */
     LDM_SPNOFF_A,   /* (SP - Offset64) <- A */
     LDM_FOOFF_A,    /* (SP + FO + Offset64) <- A */
     LDM_FONOFF_A,   /* (SP - FO + Offset64) <- A */
 
     LDM_BPOFF_B,    /* (BP + Offset64) <- B */
     LDM_BPOFFA_B,   /* (BP + A) <- B */
-    LDM_SPOFF_B,    /* (SP + Offset64) <- B */
     LDM_SPNOFF_B,   /* (SP - Offset64) <- B */
     LDM_FOOFF_B,    /* (SP + FO + Offset64) <- B */
     LDM_FONOFF_B,   /* (SP - FO + Offset64) <- B */
 
     LDBP_FO_OFF,     /* BP <- (SB + FO + Offset64) */
     LDBP_FO_NOFF,    /* BP <- (SB + FO - Offset64) */
-    LDBP_SP_OFF ,    /* BP <- (SP + Offset64) */
     LDBP_SP_NOFF,    /* BP <- (SP - Offset64) */
+
+    LDM_FOOFF_BP,     /* BP <- (SB + FO + Offset64) */
+    LDM_FONOFF_BP,    /* BP <- (SB + FO - Offset64) */
+    LDM_SPNOFF_BP,    /* BP <- (SP - Offset64) */
 
     LDFO,            /* FO <- SP - SB */
 
@@ -51,7 +50,7 @@ enum Opcode {
 
     ADD_SP_IMM,     /* SP <- SP + Immediate64 */
     ADD_SP_B,       /* SP <- SP + B */
-    ADD_SB_A,       /* SP <- SP + A */
+    ADD_SP_A,       /* SP <- SP + A */
     
     PUSH_FO,         /* (SP) <- FO; SP++ */
     PUSH_IMM,        /* (SP) <- Immediate64; SP++ */
@@ -72,10 +71,6 @@ enum Opcode {
     SL_B_IMM,      /* B <- B << Immediate8 */
     SR_A_IMM,      /* A <- A >> Immediate8 */
     SR_B_IMM,      /* B <- A >> Immediate8 */
-    RL_A_IMM, 
-    RL_B_IMM,
-    RR_A_IMM,
-    RR_B_IMM,
 
     INVA,           /* A <- !A */
     INVB,           /* B <- !B */

@@ -1,22 +1,26 @@
  
-CXX := gcc
-CXXFLAGS := -g -O3 -lm
+CXX := clang
+CXXFLAGS := -g -lm
 
 TARGET_NAME := tvm
 
 SRC := vm.c 
 HDR := instructions.h mem_mac.h vm.h
 
-CLEAN_LIST := $(TARGET_NAME) *.o *.gch
+CLEAN_LIST := $(TARGET_NAME) *.o *.gch *.out
 
 default:
-	$(CXX) $(CXXFLAGS) $(HDR) $(SRC) main.c -o $(TARGET_NAME)
+	$(CXX) $(CXXFLAGS) $(HDR) $(SRC) main.c 
+	@rm -rf *.o *.gch
+	@mv a.out $(TARGET_NAME)
 
 clean:
 	rm -f $(CLEAN_LIST)
 
 build_test:
-	$(CXX) $(CXXFLAGS) $(HDR) $(SRC) test.c  -o $(TARGET_NAME)
+	$(CXX) $(CXXFLAGS) $(HDR) $(SRC) test.c 
+	@rm -rf *.o *.gch
+	@mv a.out $(TARGET_NAME)
 
 test:
 	make build_test
