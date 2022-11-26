@@ -1,11 +1,11 @@
  
 CXX := clang
-CXXFLAGS := -g -lm -O3
+CXXFLAGS := -g -lm
 
-TARGET_NAME := tvm
+TARGET_NAME := hash_test
 
-SRC := vm.c 
-HDR := instructions.h mem_mac.h vm.h 
+SRC := hash.c
+HDR := hash.h
 
 CLEAN_LIST := $(TARGET_NAME) *.o *.gch *.out
 
