@@ -1,0 +1,14 @@
+(* A hello world program 
+ * demonstrating closure
+ *)
+
+let mkGreeter = func(str greeting) -> func(str) {
+    func(str name) {
+        println(greeting, ", ", name)
+    } 
+}
+
+-- Single Line Comment
+let hello = mkGreeter("Hello")
+hello("World")
+

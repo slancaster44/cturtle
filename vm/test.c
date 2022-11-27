@@ -984,10 +984,10 @@ int main() {
         EXIT,
     };
 
-    Execute(code, 28);
-    /*testStack();
+    //Execute(code, 28);
+    testStack();
     testControl();
     testMaths();
-    testBufferPointer();*/
+    testBufferPointer();
     return 0;
 }
