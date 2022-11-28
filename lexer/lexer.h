@@ -7,6 +7,7 @@
 
 enum TokenType {
     INVALID,
+    EOS, /* End of statement */
     IDENT,
     CHAR,
     INT,
@@ -47,4 +48,5 @@ void deleteLexer(struct Lexer* l);
 struct Token newToken(struct Lexer* l);
 void deleteToken(struct Token* t);
 
+void printToken(struct Token* t);
 #endif

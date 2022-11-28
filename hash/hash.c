@@ -45,7 +45,7 @@ void setPair(struct Map* m, char* key, int value) {
     struct Pair* pairToAdd = new(struct Pair);
     pairToAdd->Value = value;
     pairToAdd->keyHash = hashKey(key);
-    pairToAdd->Key = new_array(char, strlen(key));
+    pairToAdd->Key = new_array(char, strlen(key) + 1);
     strcpy(pairToAdd->Key, key);
 
     if (m->capacity * ALLOC_THRESHOLD < m->pairsUsed + 1) {

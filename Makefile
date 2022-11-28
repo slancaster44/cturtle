@@ -1,5 +1,5 @@
 CC := clang
-CCFLAGS := -g -lm -O3 -Icommon
+CCFLAGS := -g -lm -Icommon -lefence
 
 VM_SRC := vm/vm.c
 VM_HDR := vm/instructions.h common/mem_mac.h vm/vm.h
