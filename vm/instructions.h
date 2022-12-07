@@ -10,37 +10,21 @@ enum Opcode {
     LDA_B,          /* A <- B */
     LDB_A,          /* B <- A */
 
-    LDA_BP_OFF,      /* A <- (BP + Offset64) */
-    LDA_BPOFF_B,     /* A <- (BP + B) */
     LDA_SP_NOFF,     /* A <- (SP - Offset64) */
     LDA_FO_OFF,      /* A <- (SB + FO + Offset64) */
     LDA_FO_NOFF,     /* A <- (SB + FO - Offset64) */
 
-    LDB_BP_OFF,      /* B <- (BP + Offset64) */
-    LDB_BPOFF_A,     /* B <- (BP + A) */
     LDB_SP_NOFF,     /* B <- (SP - Offset64) */
     LDB_FO_OFF,      /* B <- (SB + FO + Offset64) */
     LDB_FO_NOFF,     /* B <- (SB + FO - Offset64) */
 
-    LDM_BPOFF_A,    /* (BP + Offset64) <- A */
-    LDM_BPOFFB_A,   /* (BP + B) <- A */
     LDM_SPNOFF_A,   /* (SP - Offset64) <- A */
     LDM_FOOFF_A,    /* (SP + FO + Offset64) <- A */
     LDM_FONOFF_A,   /* (SP - FO + Offset64) <- A */
 
-    LDM_BPOFF_B,    /* (BP + Offset64) <- B */
-    LDM_BPOFFA_B,   /* (BP + A) <- B */
     LDM_SPNOFF_B,   /* (SP - Offset64) <- B */
     LDM_FOOFF_B,    /* (SP + FO + Offset64) <- B */
     LDM_FONOFF_B,   /* (SP - FO + Offset64) <- B */
-
-    LDBP_FO_OFF,     /* BP <- (SB + FO + Offset64) */
-    LDBP_FO_NOFF,    /* BP <- (SB + FO - Offset64) */
-    LDBP_SP_NOFF,    /* BP <- (SP - Offset64) */
-
-    LDM_FOOFF_BP,     /* BP <- (SB + FO + Offset64) */
-    LDM_FONOFF_BP,    /* BP <- (SB + FO - Offset64) */
-    LDM_SPNOFF_BP,    /* BP <- (SP - Offset64) */
 
     LDFO,            /* FO <- SP - SB */
 
@@ -56,10 +40,8 @@ enum Opcode {
     PUSH_IMM,        /* (SP) <- Immediate64; SP++ */
     PUSH_A,          /* (SP) <- A; SP++  */
     PUSH_B,          /* (SP) <- B; SP++  */
-    PUSH_BP,         /* (SP) <- BP; SP++ */
     POP_A,           /* SP--; A <- (SP)  */
     POP_B,           /* SP--; B <- (SP)  */
-    POP_BP,          /* SP--; BP <- (SP) */
     POP_FO,          /* SP--; FO <- (SP) */
     
     AND_A_B,        /* A <- A & B */
@@ -153,10 +135,139 @@ enum Opcode {
 
     BUILTIN,        /* Execute Builtin Call #Immediate8 */
 
-    ALLOC_IMM,      /* BP <- malloc(sizeof(qword) * immediate64)*/
-    ALLOC_A,        /* BP <- malloc(sizeof(qword) * a) */
-    ALLOC_B,        /* BP <- malloc(sizeof(qword) * b) */
-    DEALLOC,        /* free(BP) */
+    /* Unimplemented */
+    LDRBS_IMM, //FI SI
+    LDRBS_A, //FI SI
+    LDRBS_B, //FI SI
+
+    LDQBS_IMM, //FI SI
+    LDQBS_A, //FI SI
+    LDQBS_B, //FI SI
+
+    LDM_BPAOFFIMM_IMM, //FI SI
+    LDM_BPAOFFIMM_A, //FI SI
+    LDM_BPAOFFIMM_B, //FI SI
+
+    LDM_BPBOFFIMM_IMM, //FI SI
+    LDM_BPBOFFIMM_A, //FI SI
+    LDM_BPBOFFIMM_B, //FI SI
+
+    LDM_BPBOFFA_IMM, //FI SI
+    LDM_BPBOFFB_IMM, //FI SI
+
+    LDM_BPAOFFA_B, //FI 
+    LDM_BPAOFFB_A, //FI
+
+    LDM_BPAOFFA_IMM, //FI SI
+    LDM_BPAOFFB_IMM, //FI SI
+
+    LDM_BPBOFFA_B, //FI
+    LDM_BPBOFFB_A, //FI
+
+    LDA_BPAOFFIMM, //FI SI
+    LDB_BPAOFFIMM, //FI SI
+
+    LDA_BPBOFFIMM, //FI SI 
+    LDB_BPBOFFIMM, //FI SI
+
+    LDA_BPAOFFB, //FI SI
+    LDB_BPAOFFA, //FI
+
+    LDA_BPBOFFB, //FI SI
+    LDB_BPBOFFA, //FI SI
+
+    LDM_BPAOFFIMM_BPA, //FI
+    LDM_BPAOFFA_BPA, //FI
+    LDM_BPAOFFB_BPA, //FI
+
+    LDM_BPAOFFIMM_BPB, //FI SI
+    LDM_BPAOFFA_BPB, //FI SI
+    LDM_BPAOFFB_BPB, //FI SI
+
+    LDM_BPBOFFIMM_BPA, //FI SI
+    LDM_BPBOFFA_BPA, //FI SI
+    LDM_BPBOFFB_BPA, //FI SI
+
+    LDM_BPBOFFIMM_BPB, //FI 
+    LDM_BPBOFFA_BPB, //FI
+    LDM_BPBOFFB_BPB, //FI
+
+    LDBPA_BPAOFFIMM, //FI
+    LDBPA_BPAOFFA, //FI
+    LDBPA_BPAOFFB, //FI
+
+    LDBPA_BPBOFFIMM, //FI SI
+    LDBPA_BPBOFFA, //FI SI
+    LDBPA_BPBOFFB, //FI SI
+
+    LDBPB_BPAOFFIMM, //FI SI
+    LDBPB_BPAOFFA, //FI SI
+    LDBPB_BPAOFFB, //FI SI
+
+    LDBPB_BPBOFFIMM, //FI
+    LDBPB_BPBOFFA, //FI
+    LDBPB_BPBOFFB, //FI
+
+    LDBSFO,
+    PUSH_BSFO,
+    POP_BSFO,
+
+    ADD_BSP_IMM,
+    ADD_BSP_A,
+    ADD_BSP_B,
+
+    SUB_BSP_IMM,
+    SUB_BSP_A,
+    SUB_BSP_B,
+
+    LDBPA_BFOOFF_IMM,
+    LDBPA_BFONOFF_IMM,
+    LDBPA_BSPNOFF_IMM,
+    LDBPA_BFOOFF_A,
+    LDBPA_BFONOFF_A,
+    LDBPA_BSPNOFF_A,
+    LDBPA_BFOOFF_B,
+    LDBPA_BFONOFF_B,
+    LDBPA_BSPNOFF_B,
+
+    LDBPB_BFOOFF_IMM,
+    LDBPB_BFONOFF_IMM,
+    LDBPB_BSPNOFF_IMM,
+    LDBPB_BFOOFF_A,
+    LDBPB_BFONOFF_A,
+    LDBPB_BSPNOFF_A,
+    LDBPB_BFOOFF_B,
+    LDBPB_BFONOFF_B,
+    LDBPB_BSPNOFF_B,
+
+    PUSH_BPA,
+    PUSH_BPB,
+    
+    POP_BPA,
+    POP_BPB,
+
+    ALLOC_BPA, //FI SI
+    ALLOC_BPB, //FI SI
+
+    RESIZE_BPA,
+    RESIZE_BPB,
+
+    DEALLOC_BPA, //FI SI
+    DEALLOC_BPB, //FI SI
+
+    UNION_BPA_BPB,
+    UNION_BPB_BPA,
+
+    APPENDBPA_IMM,
+    APPENDBPA_A,
+    APPENDBPA_B,
+
+    APPENDBDB_IMM,
+    APPENDBPB_A,
+    APPENDBPB_B,
+
+    /* ^^^ Unimplemented ^^^^ */
+
     EXIT,           /* Kill Process */
 };
 

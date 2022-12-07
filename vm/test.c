@@ -1,5 +1,6 @@
 #include "vm.h"
 #include "instructions.h"
+#include "buffer.h"
 
 #include <stdio.h>
 
@@ -576,126 +577,6 @@ void testMaths() {
 
 }
 
-void testBufferPointer() {
-    byte code[28] = {
-        ALLOC_IMM,
-        list8bitImm(0x0F),
-        LDA_IMM,
-        list8bitImm(0xFF),
-        LDM_BPOFF_A,
-        list8bitImm(0x0E),
-        EXIT,
-    };
-
-    Execute(code, 28);
-    assert(peakBp(0x0E) == 0xFF, "LDM_BPOFF_A");
-    freeBP();
-
-    byte code1[28] = {
-        ALLOC_IMM,
-        list8bitImm(0x0F),
-        LDB_IMM,
-        list8bitImm(0xFE),
-        LDM_BPOFF_B,
-        list8bitImm(0x0C),
-        EXIT,
-    };
-    Execute(code1, 28);
-    assert(peakBp(0x0C) == 0xFE, "LDM_BPOFF_B");
-    freeBP();
-
-    byte code2[37] = {
-        ALLOC_IMM,
-        list8bitImm(0x0F),
-        LDB_IMM,
-        list8bitImm(0xFE),
-        LDM_BPOFF_B,
-        list8bitImm(0x0C),
-        LDA_BP_OFF,
-        list8bitImm(0x0C),
-        EXIT,
-    };
-    Execute(code2, 37);
-    assert(getA() == 0xFE, "LDA_BPOFF");
-    freeBP();
-
-    byte code3[37] = {
-        ALLOC_IMM,
-        list8bitImm(0x0F),
-        LDA_IMM,
-        list8bitImm(0xFF),
-        LDM_BPOFF_A,
-        list8bitImm(0x0E),
-        LDB_BP_OFF,
-        list8bitImm(0x0E),
-        EXIT,
-    };
-    Execute(code3, 37);
-    assert(getB() == 0xFF, "LDB_BPOFF");
-    freeBP();
-
-    byte code4[38] = {
-        LDA_IMM,
-        list8bitImm(0x0A),
-        ALLOC_IMM,
-        list8bitImm(0x0F),
-        LDM_BPOFF_A,
-        list8bitImm(0x0D),
-        LDA_IMM,
-        list8bitImm(0x0D),
-        LDB_BPOFF_A,
-        EXIT,
-    };
-    Execute(code4, 38);
-    assert(getB() == 0x0A, "LDB_BPOFF_A");
-    freeBP();
-
-    byte code5[38] = {
-        LDB_IMM,
-        list8bitImm(0x0C),
-        ALLOC_IMM,
-        list8bitImm(0x0F),
-        LDM_BPOFF_B,
-        list8bitImm(0x0D),
-        LDB_IMM,
-        list8bitImm(0x0D),
-        LDA_BPOFF_B,
-        EXIT,
-    };
-    Execute(code5, 38);
-    assert(getA() == 0x0C, "LDA_BPOFF_B");
-    freeBP();
-
-    byte code6[29] = {
-        ALLOC_IMM,          /* Allocate buffer */
-        list8bitImm(0x0F),
-        LDB_IMM,            /* Load index into b */
-        list8bitImm(0x0B),
-        LDA_IMM,            /* Load value into a */
-        list8bitImm(0x0A),
-        LDM_BPOFFB_A, /* Move value into memory*/
-        EXIT,
-    };
-    Execute(code6, 29);
-    assert(peakBp(0x0B) == 0x0A, "LDM_BPOFFB_A");
-    freeBP();
-
-
-    byte code7[29] = {
-        ALLOC_IMM,          /* Allocate buffer */
-        list8bitImm(0x0F),
-        LDA_IMM,            /* Load index into a */
-        list8bitImm(0x0A),
-        LDB_IMM,            /* Load value into b */
-        list8bitImm(0x0B),
-        LDM_BPOFFA_B, /* Move value into memory*/
-        EXIT,
-    };
-    Execute(code7, 29);
-    assert(peakBp(0x0A) == 0x0B, "LDM_BPOFFB_A");
-    freeBP();
-}
-
 void testStack() {
     
     byte code[40] = {
@@ -745,24 +626,6 @@ void testStack() {
     };
     Execute(code2, 12);
     assert(getB() == 0x0C, "PUSH_B");
-
-    byte code3[40] = {
-        ALLOC_IMM,
-        list8bitImm(0x0C),
-        LDA_IMM,
-        list8bitImm(0x0D),
-        LDM_BPOFF_A,
-        list8bitImm(0x0A),
-        PUSH_BP,
-        PUSH_IMM,
-        list8bitImm(0x0B),
-        POP_A,
-        POP_BP,
-        EXIT,
-    };
-    Execute(code3, 40);
-    assert(peakBp(0x0A) == 0x0D, "POP_BP, PUSH_BP");
-    freeBP(); 
 
     byte code4[46] = {
         ADD_SP_IMM,
@@ -966,6 +829,367 @@ void testControl() {
     assert(getB() == 0x08, "JPA_OFF");
 }
 
+void testBuffer() {
+    byte code[10] = {
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        EXIT,
+    };
+    Execute(code, 10);
+    assert(getQBS() == 0x01, "LDQBS_IMM");
+
+    byte code1[10] = {
+        LDRBS_IMM,
+        list8bitImm(0x01),
+        EXIT,
+    };
+    Execute(code1, 10);
+    assert(getRBS() == 0x01, "LDRBS_IMM");
+
+    byte code2[21] = {
+        LDA_IMM,
+        list8bitImm(0x01),
+        LDQBS_A,
+        LDB_IMM,
+        list8bitImm(0x02),
+        LDRBS_B,
+        EXIT,
+    };
+    Execute(code2, 21);
+    assert(getRBS() == 0x02, "LDRBS_B");
+    assert(getQBS() == 0x01, "LDQBS_A");
+
+    byte code3[21] = {
+        LDB_IMM,
+        list8bitImm(0x01),
+        LDQBS_B,
+        LDA_IMM,
+        list8bitImm(0x02),
+        LDRBS_A,
+        EXIT,
+    };
+    Execute(code3, 21);
+    assert(getRBS() == 0x02, "LDRBS_A");
+    assert(getQBS() == 0x01, "LDQBS_B");
+
+    byte code4[20] = {
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x01),
+        ALLOC_BPA,
+        EXIT,
+    };
+    Execute(code4, 20);
+    assert(getBPA()->References != NULL, "ALLOC_BPA Refs");
+    assert(getBPA()->QwordBuffer != NULL, "ALLOC_BPA QwordBuf");
+    freeBPA();
+
+    byte code5[20] = {
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x01),
+        ALLOC_BPB,
+        EXIT,
+    };
+    Execute(code5, 20);
+    assert(getBPB()->References != NULL, "ALLOC_BPB Refs");
+    assert(getBPB()->QwordBuffer != NULL, "ALLOC_BPB QwordBuf");
+    freeBPB();
+
+    byte code6[46] = {
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPA,
+        LDM_BPAOFFIMM_IMM,
+        list8bitImm(0x00),
+        list8bitImm(0x0A),
+        LDA_BPAOFFIMM,
+        list8bitImm(0x00),
+        EXIT,
+    };
+    Execute(code6, 46);
+    assert(getA() == 0x0A, "LDM_BPAOFF_IMM, LDA_BPAOFFIMM");
+    freeBPA();
+
+    byte code7[74] = {
+        LDQBS_IMM,
+        list8bitImm(0x02),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPA,
+        LDA_IMM,
+        list8bitImm(0x0A),
+        LDB_IMM,
+        list8bitImm(0x0B),
+        LDM_BPAOFFIMM_A,
+        list8bitImm(0x00),
+        LDM_BPAOFFIMM_B,
+        list8bitImm(0x01),
+        LDA_BPAOFFIMM,
+        list8bitImm(0x01),
+        LDB_BPAOFFIMM,
+        list8bitImm(0x00),
+        EXIT,
+    };
+    Execute(code7, 74);
+    assert(getA() == 0x0B, "LDM_BPAOFFIMM_B");
+    assert(getB() == 0x0A, "LDM_BPAOFFIMM_A");
+    freeBPA();
+
+    byte code8[74] = {
+        LDQBS_IMM,
+        list8bitImm(0x02),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPB,
+        LDA_IMM,
+        list8bitImm(0x0A),
+        LDB_IMM,
+        list8bitImm(0x0B),
+        LDM_BPBOFFIMM_A,
+        list8bitImm(0x00),
+        LDM_BPBOFFIMM_B,
+        list8bitImm(0x01),
+        LDA_BPBOFFIMM,
+        list8bitImm(0x01),
+        LDB_BPBOFFIMM,
+        list8bitImm(0x00),
+        EXIT,
+    };
+    Execute(code8, 74);
+    assert(getA() == 0x0B, "LDM_BPBOFFIMM_B");
+    assert(getB() == 0x0A, "LDM_BPBOFFIMM_A");
+    freeBPB();
+
+    byte code9[85] = {
+        LDQBS_IMM,
+        list8bitImm(0x00),
+        LDRBS_IMM,
+        list8bitImm(0x01),
+        ALLOC_BPA, //BPA Will store reference
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPB,  //BPB Will store an imeediate
+        LDM_BPBOFFIMM_IMM,
+        list8bitImm(0x00),
+        list8bitImm(0x0A),
+        LDM_BPAOFFIMM_BPB, //SAVE bpb to bpa
+        list8bitImm(0x00),
+        ALLOC_BPB,
+        DEALLOC_BPB, //CLEAR out BPB
+        LDBPB_BPAOFFIMM,
+        list8bitImm(0x00), //LOAD BPB
+        LDA_BPBOFFIMM,      //Load Value
+        list8bitImm(0x00), 
+        EXIT,
+    };
+    Execute(code9, 85);
+    assert(getA() == 0x0A, "BUFFER TEST 1");
+    freeBPB();
+    freeBPA();
+
+    byte code10[85] = {
+        LDQBS_IMM,
+        list8bitImm(0x00),
+        LDRBS_IMM,
+        list8bitImm(0x01),
+        ALLOC_BPB, //BPA Will store reference
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPA,  //BPB Will store an imeediate
+        LDM_BPAOFFIMM_IMM,
+        list8bitImm(0x00),
+        list8bitImm(0x0A),
+        LDM_BPBOFFIMM_BPA, //SAVE bpb to bpa
+        list8bitImm(0x00),
+        ALLOC_BPA,
+        DEALLOC_BPA, //CLEAR out BPB
+        LDBPA_BPBOFFIMM,
+        list8bitImm(0x00), //LOAD BPB
+        LDB_BPAOFFIMM,      //Load Value
+        list8bitImm(0x00), 
+        EXIT,
+    };
+    Execute(code10, 85);
+    assert(getB() == 0x0A, "BUFFER TEST 2");
+    freeBPB();
+    freeBPA();
+
+    byte code11[86] = {
+        LDQBS_IMM,
+        list8bitImm(0x00),
+        LDRBS_IMM,
+        list8bitImm(0x01),
+        ALLOC_BPB, 
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPA,
+        LDA_IMM,
+        list8bitImm(0x00),
+        LDM_BPAOFFA_IMM,
+        list8bitImm(0x0A),
+        LDM_BPBOFFIMM_BPA,
+        list8bitImm(0x00),
+        ALLOC_BPA,
+        DEALLOC_BPA,
+        LDBPA_BPBOFFIMM,
+        list8bitImm(0x00),
+        LDB_BPAOFFA,
+        EXIT,
+    };
+    Execute(code11, 86);
+    assert(getB() == 0x0A, "BUFFER TEST 3");
+    freeBPB();
+    freeBPA();
+
+    byte code12[86] = {
+        LDQBS_IMM,
+        list8bitImm(0x00),
+        LDRBS_IMM,
+        list8bitImm(0x01),
+        ALLOC_BPA, 
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPB,
+        LDB_IMM,
+        list8bitImm(0x00),
+        LDM_BPBOFFB_IMM,
+        list8bitImm(0x0A),
+        LDM_BPAOFFIMM_BPB,
+        list8bitImm(0x00),
+        ALLOC_BPB,
+        DEALLOC_BPB,
+        LDBPB_BPAOFFIMM,
+        list8bitImm(0x00),
+        LDA_BPBOFFB,
+        EXIT,
+    };
+    Execute(code12, 86);
+    assert(getA() == 0x0A, "BUFFER TEST 4");
+    freeBPB();
+    freeBPA();
+
+    byte code13[62] = {
+        LDQBS_IMM,
+        list8bitImm(0x00),
+        LDRBS_IMM,
+        list8bitImm(0x01),
+        ALLOC_BPA, 
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPB,
+        LDA_IMM,
+        list8bitImm(0x00),
+        LDM_BPBOFFA_IMM,
+        list8bitImm(0x0A),
+        LDM_BPAOFFA_BPB,
+        ALLOC_BPB,
+        DEALLOC_BPB,
+        LDBPB_BPAOFFA,
+        LDB_BPBOFFA,
+        EXIT,
+    };
+    Execute(code13, 62);
+    assert(getB() == 0x0A, "BUFFER TEST 5");
+    freeBPB();
+    freeBPA();
+
+    byte code14[62] = {
+        LDQBS_IMM,
+        list8bitImm(0x00),
+        LDRBS_IMM,
+        list8bitImm(0x01),
+        ALLOC_BPA, 
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPB,
+        LDB_IMM,
+        list8bitImm(0x00),
+        LDM_BPBOFFB_IMM,
+        list8bitImm(0x0A),
+        LDM_BPAOFFB_BPB,
+        ALLOC_BPB,
+        DEALLOC_BPB,
+        LDBPB_BPAOFFB,
+        LDA_BPBOFFB,
+        EXIT,
+    };
+    Execute(code14, 62);
+    assert(getA() == 0x0A, "BUFFER TEST 6");
+    freeBPB();
+    freeBPA();
+
+    byte code15[62] = {
+        LDQBS_IMM,
+        list8bitImm(0x00),
+        LDRBS_IMM,
+        list8bitImm(0x01),
+        ALLOC_BPB, 
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPA,
+        LDA_IMM,
+        list8bitImm(0x00),
+        LDM_BPAOFFA_IMM,
+        list8bitImm(0x0A),
+        LDM_BPBOFFA_BPA,
+        ALLOC_BPA,
+        DEALLOC_BPA,
+        LDBPA_BPBOFFA,
+        LDB_BPAOFFA,
+        EXIT,
+    };
+    Execute(code15, 62);
+    assert(getB() == 0x0A, "BUFFER TEST 7");
+    freeBPB();
+    freeBPA();
+
+    byte code16[62] = {
+        LDQBS_IMM,
+        list8bitImm(0x00),
+        LDRBS_IMM,
+        list8bitImm(0x01),
+        ALLOC_BPB, 
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPA,
+        LDB_IMM,
+        list8bitImm(0x00),
+        LDM_BPAOFFB_IMM,
+        list8bitImm(0x0A),
+        LDM_BPBOFFB_BPA,
+        ALLOC_BPA,
+        DEALLOC_BPA,
+        LDBPA_BPBOFFB,
+        LDA_BPAOFFB,
+        EXIT,
+    };
+    Execute(code16, 62);
+    assert(getA() == 0x0A, "BUFFER TEST 8");
+    freeBPB();
+    freeBPA();
+}
+
 int main() {
     byte code[28] = {
         LDA_IMM,
@@ -985,9 +1209,9 @@ int main() {
     };
 
     //Execute(code, 28);
-    testStack();
-    testControl();
-    testMaths();
-    testBufferPointer();
+   // testStack();
+   // testControl();
+   // testMaths();
+    testBuffer();
     return 0;
 }

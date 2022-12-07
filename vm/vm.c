@@ -1,5 +1,6 @@
 #include "vm.h"
 #include "mem_mac.h"
+#include "buffer.h"
 #include "instructions.h"
 
 #include <stdlib.h>
@@ -10,9 +11,16 @@
 /* Debugging Functions */
 qword getA() { return REG_A; }
 qword getB() { return REG_B; }
-qword peakBp(qword off) { return BP[off]; }
-void freeBP() { free(BP); }
 
+qword getQBS() { return QBS; }
+qword getRBS() { return RBS; }
+struct Buffer* getBPA() { return BPA; }
+struct Buffer* getBPB() { return BPB; }
+void freeBPA() { Dealloc_Bpa(); }
+void freeBPB() { Dealloc_Bpb(); }
+
+
+/* Helper macros & functions */
 #define decodeFirstReg(VAL) VAL >> 4
 #define decodeSecondReg(VAL) VAL & 0b00001111
 #define INITIAL_stack_limit 2
@@ -29,6 +37,14 @@ void initVM(byte* code, int code_length) {
     SP = 0;
     stack_limit = INITIAL_stack_limit;
 
+    BufferStack = new_array(struct Buffer*, INITIAL_stack_limit);
+    BSP = 0;
+    bufferStackLimit = INITIAL_stack_limit;
+
+    for (int i = 0; i < INITIAL_stack_limit; i ++) {
+        BufferStack[i] = NULL;
+    }
+
     if (sizeof(qword) != sizeof(qword*)) {
         printf("Word Size Misalignment");
         exit(1);
@@ -40,7 +56,6 @@ void initVM(byte* code, int code_length) {
 }
 
 int executeInstruction() {
-
     enum Opcode curOpcode = getByteImm();
     switch (curOpcode) {
         case LDA_IMM:
@@ -54,30 +69,6 @@ int executeInstruction() {
             break;
         case LDB_A:
             Ldb_A();
-            break;
-        case LDM_BPOFF_A:
-            Ldm_BpOff_A(getQwordImm());
-            break;
-        case LDM_BPOFF_B:
-            Ldm_BpOff_B(getQwordImm());
-            break;
-        case LDA_BP_OFF:
-            Lda_BpOff(getQwordImm());
-            break;
-        case LDB_BP_OFF:
-            Ldb_BpOff(getQwordImm());
-            break;
-        case LDA_BPOFF_B:
-            Lda_BpOffB();
-            break;
-        case LDB_BPOFF_A:
-            Ldb_BpOffA();
-            break;
-        case LDM_BPOFFA_B:
-            Ldm_BpOffA_B();
-            break;
-        case LDM_BPOFFB_A:
-            Ldm_BpOffB_A();
             break;
         case LDFO:
             Ldfo();
@@ -133,12 +124,6 @@ int executeInstruction() {
         case LDB_SP_NOFF:
             Ldb_SpNoff(getQwordImm());
             break;
-        case LDBP_SP_NOFF:
-            Ldbp_SpNoff(getQwordImm());
-            break;
-        case LDM_SPNOFF_BP:
-            Ldm_SpNoff_Bp(getQwordImm());
-            break;
         case LDA_SP_NOFF:
             Lda_SpNoff(getQwordImm());
             break;
@@ -156,12 +141,6 @@ int executeInstruction() {
             break;
         case PUSH_B:
             Push_B();
-            break;
-        case PUSH_BP:
-            Push_Bp();
-            break;
-        case POP_BP:
-            Pop_Bp();
             break;
         case ADD_A_B:
             Add_A_B();
@@ -370,25 +349,136 @@ int executeInstruction() {
         case RET:
             Ret();
             break;
+        case LDRBS_IMM:
+            Ldrbs_Imm(getQwordImm());
+            break;
+        case LDRBS_A:
+            Ldrbs_A();
+            break;
+        case LDRBS_B:
+            Ldrbs_B();
+            break;
+        case LDQBS_IMM:
+            Ldqbs_Imm(getQwordImm());
+            break;
+        case LDQBS_A:
+            Ldqbs_A();
+            break;
+        case LDQBS_B:
+            Ldqbs_B();
+            break;
+        case ALLOC_BPA:
+            Alloc_Bpa();
+            break;
+        case ALLOC_BPB:
+            Alloc_Bpb();
+            break;
+        case DEALLOC_BPA:
+            Dealloc_Bpa();
+            break;
+        case DEALLOC_BPB:
+            Dealloc_Bpb();
+            break;
+        case LDM_BPAOFFIMM_IMM:
+            Ldm_BpaOffImm_Imm(getQwordImm(), getQwordImm());
+            break;
+        case LDM_BPAOFFIMM_A:
+            Ldm_BpaOffImm_A(getQwordImm());
+            break;
+        case LDM_BPAOFFIMM_B:
+            Ldm_BpaOffImm_B(getQwordImm());
+            break;
+        case LDA_BPAOFFIMM:
+            Lda_BpaOffImm(getQwordImm());
+            break;
+        case LDB_BPAOFFIMM:
+            Ldb_BpaOffImm(getQwordImm());
+            break;
+        case LDM_BPBOFFIMM_IMM:
+            Ldm_BpbOffImm_Imm(getQwordImm(), getQwordImm());
+            break;
+        case LDM_BPBOFFIMM_A:
+            Ldm_BpbOffImm_A(getQwordImm());
+            break;
+        case LDM_BPBOFFIMM_B:
+            Ldm_BpbOffImm_B(getQwordImm());
+            break;
+        case LDA_BPBOFFIMM:
+            Lda_BpbOffImm(getQwordImm());
+            break;
+        case LDB_BPBOFFIMM:
+            Ldb_BpbOffImm(getQwordImm());
+            break;
+        case LDM_BPAOFFIMM_BPA:
+            Ldm_BpaOffImm_Bpa(getQwordImm());
+            break;
+        case LDM_BPAOFFIMM_BPB:
+            Ldm_BpaOffImm_Bpb(getQwordImm());
+            break;
+        case LDBPB_BPAOFFIMM:
+            Ldbpb_BpaOffImm(getQwordImm());
+            break;
+        case LDM_BPBOFFIMM_BPA:
+            Ldm_BpbOffImm_Bpa(getQwordImm());
+            break;
+        case LDBPA_BPBOFFIMM:
+            Ldbpa_BpbOffImm(getQwordImm());
+            break;
+        case LDM_BPAOFFA_IMM:
+            Ldm_BpaOffA_Imm(getQwordImm());
+            break;
+        case LDB_BPAOFFA:
+            Ldb_BpaOffA();
+            break;
+        case LDM_BPBOFFB_IMM:
+            Ldm_BpbOffB_Imm(getQwordImm());
+            break;
+        case LDA_BPBOFFB:
+            Lda_BpbOffB();
+            break;
+        case LDM_BPBOFFA_IMM:
+            Ldm_BpbOffA_Imm(getQwordImm());
+            break;
+        case LDM_BPAOFFA_BPB:
+            Ldm_BpaOffA_Bpb();
+            break;
+        case LDBPB_BPAOFFA:
+            Ldbpb_BpaOffA();
+            break;
+        case LDB_BPBOFFA:
+            Ldb_BpbOffA();
+            break;
+        case LDM_BPAOFFB_BPB:
+            Ldm_BpaOffB_Bpb();
+            break;
+        case LDBPB_BPAOFFB:
+            Ldbpb_BpaOffB();
+            break;
+        case LDM_BPBOFFA_BPA:
+            Ldm_BpbOffA_Bpa();
+            break;
+        case LDBPA_BPBOFFA:
+            Ldbpa_BpbOffA();
+            break;
+        case LDM_BPAOFFB_IMM:
+            Ldm_BpaOffB_Imm(getQwordImm());
+            break;
+        case LDM_BPBOFFB_BPA:
+            Ldm_BpbOffB_Bpa();
+            break;
+        case LDBPA_BPBOFFB:
+            Ldbpa_BpbOffB();
+            break;
+        case LDA_BPAOFFB:
+            Lda_BpaOffB();
+            break;
         case BUILTIN:
             HandleBuiltin(getByteImm());
-            break;
-        case ALLOC_IMM:
-            Alloc(getQwordImm());
-            break;
-        case ALLOC_A:
-            Alloc(REG_A);
-            break;
-        case ALLOC_B:
-            Alloc(REG_B);
-            break;
-        case DEALLOC:
-            free(BP);
             break;
         case EXIT:
             goto exit;
         default:
-            printf("Error: Unrecognized opcode: 0x%X\n", curOpcode);
+            printf("Error: Unrecognized opcode: 0x%X (%d)\n", curOpcode, curOpcode);
             exit(1);
     }
 
@@ -463,18 +553,6 @@ static inline void Pop_B() {
     REG_B = SB[SP];
 }
 
-static inline void Push_Bp() {
-    ensureStackAccomodations(1);
-    SB[SP] = (qword) BP;
-    SP += 1;
-
-}
-
-static inline void Pop_Bp() {
-    SP -= 1;
-    BP = (qword*) SB[SP];
-}
-
 static inline void Add_Sp_Imm(qword imm) {
     ensureStackAccomodations(imm);
     SP += imm;
@@ -510,14 +588,6 @@ static inline void Ldm_SpNoff_B(qword offset) {
     SB[SP - offset] = REG_B;
 }
 
-static inline void Ldm_SpNoff_Bp(qword offset) {
-    SB[SP - offset] = (qword) BP;
-}
-
-static inline void Ldbp_SpNoff(qword offset) {
-    BP = (qword*) SB[SP - offset];
-}
-
 static inline void Lda_SpNoff(qword offset) {
     REG_A = SB[SP - offset];
 }
@@ -540,38 +610,6 @@ static inline void Lda_B() {
 
 static inline void Ldb_A() {
     REG_B = REG_A;
-}
-
-static inline void Ldm_BpOff_A(qword offset) {
-    BP[offset] = REG_A;
-}
-
-static inline void Ldm_BpOff_B(qword offset) {
-    BP[offset] = REG_B;
-}
-
-static inline void Lda_BpOff(qword offset) {
-    REG_A = BP[offset];
-}
-
-static inline void Ldb_BpOff(qword offset) {
-    REG_B = BP[offset];
-}
-
-static inline void Lda_BpOffB() {
-    REG_A = BP[REG_B];
-}
-
-static inline void Ldb_BpOffA() {
-    REG_B = BP[REG_A];
-}
-
-static inline void Ldm_BpOffA_B() {
-    BP[REG_A] = REG_B;
-}
-
-static inline void Ldm_BpOffB_A() {
-    BP[REG_B] = REG_A;
 }
 
 static inline void Ldfo() {
@@ -614,22 +652,6 @@ static inline void Ldm_FoNoff_B(qword offset) {
 
 static inline void Ldm_FoNoff_A(qword offset) {
    SB[FO - offset] = REG_A;
-}
-
-static inline void Ldm_FoOff_Bp(qword offset) {
-   SB[FO + offset] = (qword) BP;
-}
-
-static inline void Ldm_FoNoff_Bp(qword offset) {
-   SB[FO - offset] = (qword) BP;
-}
-
-static inline void Ldbp_FoOff(qword offset) {
-    BP = (qword*) SB[FO + offset];
-}
-
-static inline void Ldbp_FoNoff(qword negative_offset) {
-    BP = (qword*) SB[FO - negative_offset];
 }
 
 static inline void Add_A_B() {
@@ -914,8 +936,246 @@ static inline void Ret() {
     PC = (byte*) SB[SP];
 }
 
-static inline void Alloc(qword size) {
-    BP = new_array(qword, size);
+static inline void Ldqbs_Imm(qword imm) {
+    QBS = imm;
+}
+
+static inline void Ldrbs_Imm(qword imm) {
+    RBS = imm;
+}
+
+static inline void Ldqbs_A(qword imm) {
+    QBS = REG_A;
+}
+
+static inline void Ldrbs_A(qword imm) {
+    RBS = REG_A;
+}
+
+static inline void Ldqbs_B(qword imm) {
+    QBS = REG_B;
+}
+
+static inline void Ldrbs_B(qword imm) {
+    RBS = REG_B;
+}
+
+static inline void Alloc_Bpa() {
+    BPA = new(struct Buffer);
+    
+    BPA->numQwords = QBS;
+    BPA->numReferences = RBS;
+
+    if (QBS != 0)
+        BPA->QwordBuffer = new_array(qword, QBS);
+    if (RBS != 0)
+        BPA->References = new_array(struct Buffer*, RBS);
+
+    for (int i = 0; i < RBS; i ++) {
+        BPA->References[i] = NULL;
+    }
+}
+
+static inline void Alloc_Bpb() {
+    BPB = new(struct Buffer);
+    
+    BPB->numQwords = QBS;
+    BPB->numReferences = RBS;
+
+    if (QBS != 0) 
+        BPB->QwordBuffer = new_array(qword, QBS);
+    
+    if (RBS != 0) 
+        BPB->References = new_array(struct Buffer*, RBS);
+
+    for (int i = 0; i < RBS; i ++) {
+        BPB->References[i] = NULL;
+    }
+}
+
+static inline void Dealloc_Bpa() {
+    free(BPA->References); 
+    free(BPA->QwordBuffer); 
+    free(BPA);
+}
+
+static inline void Dealloc_Bpb() {
+    free(BPB->References); 
+    free(BPB->QwordBuffer); 
+    free(BPB);
+}
+
+static inline void Ldm_BpaOffImm_Imm(qword offset, qword imm) {
+    BPA->QwordBuffer[offset] = imm;
+}
+
+static inline void Ldm_BpaOffImm_A(qword offset) {
+    BPA->QwordBuffer[offset] = REG_A;
+}
+
+static inline void Ldm_BpaOffImm_B(qword offset) {
+    BPA->QwordBuffer[offset] = REG_B;
+}
+
+static inline void Lda_BpaOffImm(qword offset) {
+    REG_A = BPA->QwordBuffer[offset];
+}
+
+static inline void Ldb_BpaOffImm(qword offset) {
+    REG_B = BPA->QwordBuffer[offset];
+}
+
+static inline void Ldm_BpbOffImm_Imm(qword offset, qword imm) {
+    BPB->QwordBuffer[offset] = imm;
+}
+
+static inline void Ldm_BpbOffImm_A(qword offset) {
+    BPB->QwordBuffer[offset] = REG_A;
+}
+
+static inline void Ldm_BpbOffImm_B(qword offset) {
+    BPB->QwordBuffer[offset] = REG_B;
+}
+
+static inline void Lda_BpbOffImm(qword offset) {
+    REG_A = BPB->QwordBuffer[offset];
+}
+
+static inline void Ldb_BpbOffImm(qword offset) {
+    REG_B = BPB->QwordBuffer[offset];
+}
+
+static inline void Ldm_BpbOffA_Imm(qword imm) {
+    BPB->QwordBuffer[REG_A] = imm;
+}
+
+static inline void Ldm_BpbOffB_Imm(qword imm) {
+    BPB->QwordBuffer[REG_B] = imm;
+}
+
+static inline void Ldm_BpaOffA_Imm(qword imm) {
+    BPA->QwordBuffer[REG_A] = imm;
+}
+
+static inline void Ldm_BpaOffB_Imm(qword imm) {
+    BPA->QwordBuffer[REG_B] = imm;
+}
+
+static inline void Lda_BpaOffB() {
+    REG_A = BPA->QwordBuffer[REG_B];
+}
+
+static inline void Ldb_BpaOffA() {
+    REG_B = BPA->QwordBuffer[REG_A];
+}
+
+static inline void Lda_BpbOffB() {
+    REG_A = BPB->QwordBuffer[REG_B];
+}
+
+static inline void Ldb_BpbOffA() {
+    REG_B = BPB->QwordBuffer[REG_A];
+}
+
+static inline void Ldm_BpaOffImm_Bpa(qword offset) {
+    BPA->References[offset] = BPA;
+}
+
+static inline void Ldm_BpaOffA_Bpa() {
+    BPA->References[REG_A] = BPA;
+}
+
+static inline void Ldm_BpaOffB_Bpa() {
+    BPA->References[REG_B] = BPA;
+}
+
+static inline void Ldm_BpaOffImm_Bpb(qword offset) {
+    BPA->References[offset] = BPB;
+}
+
+static inline void Ldm_BpaOffA_Bpb() {
+    BPA->References[REG_A] = BPB;
+}
+
+static inline void Ldm_BpaOffB_Bpb() {
+    BPA->References[REG_B] = BPB;
+}
+
+//
+static inline void Ldm_BpbOffImm_Bpa(qword offset) {
+    BPB->References[offset] = BPA;
+}
+
+static inline void Ldm_BpbOffA_Bpa() {
+    BPB->References[REG_A] = BPA;
+}
+
+static inline void Ldm_BpbOffB_Bpa() {
+    BPB->References[REG_B] = BPA;
+}
+
+static inline void Ldm_BpbOffImm_Bpb(qword offset) {
+    BPB->References[offset] = BPB;
+}
+
+static inline void Ldm_BpbOffA_Bpb() {
+    BPB->References[REG_A] = BPB;
+}
+
+static inline void Ldm_BpbOffB_Bpb() {
+    BPB->References[REG_B] = BPB;
+}
+
+static inline void Ldbpa_BpaOffImm(qword offset) {
+    BPA = BPA->References[offset];
+}
+
+static inline void Ldbpa_BpaOffA() {
+    BPA = BPA->References[REG_A];
+}
+
+static inline void Ldbpa_BpaOffB() {
+    BPA = BPA->References[REG_B];
+}
+
+static inline void Ldbpa_BpbOffImm(qword offset) {
+    BPA = BPB->References[offset];
+}
+
+static inline void Ldbpa_BpbOffA() {
+    BPA = BPB->References[REG_A];
+}
+
+static inline void Ldbpa_BpbOffB() {
+    BPA = BPB->References[REG_B];
+}
+
+static inline void Ldbpb_BpaOffImm(qword offset) {
+    BPB = BPA->References[offset];
+}
+
+static inline void Ldbpb_BpaOffA() {
+    BPB = BPA->References[REG_A];
+}
+
+static inline void Ldbpb_BpaOffB() {
+    BPB = BPA->References[REG_B];
+}
+
+static inline void Ldbpb_BpbOffImm(qword offset) {
+    BPB = BPA->References[offset];
+}
+
+static inline void Ldbpb_BpbOffA() {
+    BPB = BPA->References[REG_A];
+}
+
+static inline void Ldbpb_BpbOffB() {
+    BPB = BPA->References[REG_B];
+}
+
+static inline void Ldbpsfo() {
+    BSFO = BSP;
 }
 
 static inline void HandleBuiltin(byte imm) {
@@ -945,7 +1205,7 @@ void printRegs() {
     printf("\nRegisters:\n");
     printf("A:   0x%lX\nB:   0x%lX\n", REG_A, REG_B);
     printf("SP:  0x%lX\nPC:  0x%lX\n", (qword) SP, (qword) PC);
-    printf("FO:  0x%lX\nBP:  0x%lX\n", (qword) FO, (qword) BP);
+    printf("FO:  0x%lX\n", (qword) FO);
 }
 
 void printStack() {

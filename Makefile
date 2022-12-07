@@ -1,5 +1,5 @@
 CC := clang
-CCFLAGS := -g -lm -Icommon -lefence
+CCFLAGS := -g -lm -Icommon -lefence #-O3
 
 VM_SRC := vm/vm.c
 VM_HDR := vm/instructions.h common/mem_mac.h vm/vm.h
@@ -50,3 +50,35 @@ lexer_run_test:
 
 lexer_clean:
 	rm -rf lexer/*.gch lexer/*.o lexer/*.out lexer/*.so $(LEXER_TARGET)
+
+TBIN_SRC := tbin/tbin.c common/test.c
+TBIN_HDR := tbin/tbin.h vm/instructions.h common/test.h
+TBIN_TARGET := tbin/tbin
+
+tbin_build_test:
+	$(CC) $(CCFLAGS) -Ivm $(TBIN_HDR) $(TBIN_SRC) tbin/test.c
+	@rm -rf tbin/*.gch tbin/*.o tbin/*.out tbin/*.so
+	@mv a.out $(TBIN_TARGET)
+
+tbin_run_test:
+	@make tbin_build_test
+	$(TBIN_TARGET)
+
+tbin_clean:
+	rm -rf tbin/*.gch tbin/*.o tbin/*.out tbin/*.so $(LEXER_TARGET)
+
+TDB_SRC := tdb/tdb.c
+TDB_TARGET := tdb/tdb
+
+tdb_make:
+	$(CC) $(CCFLAGS) -Itvm $(TDB_SRC) $(VM_HDR) $(VM_SRC)
+	@rm -rf vm/*.gch vm/*.o vm/*.out vm/*.so tdb/*.o tdb/*.out tdb/*.so tdb/*.gch
+	@mv a.out $(TDB_TARGET)
+
+tdb_make_run:
+	@make tdb_make
+	$(TDB_TARGET)
+
+tdb_clean:
+	@rm -rf vm/*.gch vm/*.o vm/*.out vm/*.so tdb/*.o tdb/*.out tdb/*.so tdb/*.gch
+	@rm -rf $(TDB_TARGET)

@@ -12,7 +12,6 @@ static qword REG_A;    /* General purpose register */
 static qword REG_B;    /* General purpose register */
 static byte* PC;       /* Pointer to current instruction*/
 static qword FO;       /* Offset from base of stack of the current stack frame */
-static qword* BP;       /* Pointer to current buffer we are working on */
 
 static int codelen;
 static byte* CB; /* Starting address of code */
@@ -45,37 +44,21 @@ static inline void Lda_B(); //FI SI
 static inline void Ldb_A(); //FI SI
 
 /* Memory Management Instructions */
-static inline void Lda_BpOff(qword offset); //FI SI
-static inline void Lda_BpOffB(); //FI SI
 static inline void Lda_SpNoff(qword negative_offset); //FI SI
 static inline void Lda_FoOff(qword offset); //FI SI
 static inline void Lda_FoNoff(qword negative_offset); //FI
 
-static inline void Ldb_BpOff(qword offset); //FI SI
-static inline void Ldb_BpOffA(); //FI SI
 static inline void Ldb_SpNoff(qword negative_offset); //FI SI
 static inline void Ldb_FoOff(qword offset); //FI SI
 static inline void Ldb_FoNoff(qword negative_offset); //FI SI
 
-static inline void Ldm_BpOff_A(qword offset); //FI SI
-static inline void Ldm_BpOffB_A(); //FI SI
 static inline void Ldm_SpNoff_A(qword offset); //FI SI
 static inline void Ldm_FoOff_A(qword offset); //FI SI
 static inline void Ldm_FoNoff_A(qword offset); //FI SI
 
-static inline void Ldm_BpOff_B(qword offset); //FI SI
-static inline void Ldm_BpOffA_B(); //FI SI
 static inline void Ldm_SpNoff_B(qword offset); //FI SI
 static inline void Ldm_FoOff_B(qword offset); //FI SI
 static inline void Ldm_FoNoff_B(qword offset); //FI SI
-
-static inline void Ldbp_FoOff(qword offset); //FI SI
-static inline void Ldbp_FoNoff(qword offset); //FI SI
-static inline void Ldbp_SpNoff(qword offset); //FI SI
-
-static inline void Ldm_FoOff_Bp(qword offset); //FI SI
-static inline void Ldm_FoNoff_Bp(qword offset); //FI SI
-static inline void Ldm_SpNoff_Bp(qword offset); //FI SI
 
 static inline void Ldfo(); //FI SI
 
@@ -89,17 +72,12 @@ static inline void Add_Sp_B(); //FI SI
 
 static inline void Push_Imm(qword imm); //FI SI
 static inline void Push_Fo(); //FI
-static inline void Push_Bp(); //FI SI
 static inline void Push_A(); //FI SI
 static inline void Push_B(); //FI SI
 
 static inline void Pop_Fo();
-static inline void Pop_Bp(); //FI SI
 static inline void Pop_A(); //FI SI
 static inline void Pop_B(); //FI SI
-
-static inline void Alloc(qword size); //FI SI
-static inline void Dealloc(); //FI SI
 
 /* Arithmetic Instructions */
 static inline void Add_A_B(); //FI SI
