@@ -1188,6 +1188,86 @@ void testBuffer() {
     assert(getA() == 0x0A, "BUFFER TEST 8");
     freeBPB();
     freeBPA();
+
+    byte code17[49] = {
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPA,
+        LDA_IMM,
+        list8bitImm(0x0A),
+        LDB_IMM,
+        list8bitImm(0x00),
+        LDM_BPAOFFB_A,
+        LDA_IMM,
+        list8bitImm(0x00),
+        LDB_BPAOFFA,
+        EXIT,
+    };
+    Execute(code17, 49);
+    assert(getB() == 0x0A, "BUFFER TEST 9");
+    freeBPA();
+
+    byte code18[49] = {
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPB,
+        LDA_IMM,
+        list8bitImm(0x0A),
+        LDB_IMM,
+        list8bitImm(0x00),
+        LDM_BPBOFFB_A,
+        LDA_IMM,
+        list8bitImm(0x00),
+        LDB_BPBOFFA,
+        EXIT,
+    };
+    Execute(code18, 49);
+    assert(getB() == 0x0A, "BUFFER TEST 10");
+    freeBPB();
+
+    byte code19[49] = {
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPB,
+        LDB_IMM,
+        list8bitImm(0x0A),
+        LDA_IMM,
+        list8bitImm(0x00),
+        LDM_BPBOFFA_B,
+        LDB_IMM,
+        list8bitImm(0x00),
+        LDA_BPBOFFB,
+        EXIT,
+    };
+    Execute(code19, 49);
+    assert(getA() == 0x0A, "BUFFER TEST 11");
+    freeBPB();
+
+    byte code20[49] = {
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPA,
+        LDB_IMM,
+        list8bitImm(0x0A),
+        LDA_IMM,
+        list8bitImm(0x00),
+        LDM_BPAOFFA_B,
+        LDB_IMM,
+        list8bitImm(0x00),
+        LDA_BPAOFFB,
+        EXIT,
+    };
+    Execute(code20, 49);
+    assert(getA() == 0x0A, "BUFFER TEST 12");
+    freeBPA();
 }
 
 int main() {

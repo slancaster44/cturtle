@@ -145,11 +145,9 @@ static inline void Ldbpb_BpaOffB();
 static inline void Ldbpa_BpbOffA();
 static inline void Ldbpa_BpbOffB();
 
-static inline void Ldbpa_BpaOff(qword offset); //BPA <- BPA.References[Offset]
 static inline void Ldbpa_BpbOff(qword offset); //BPA <- BPB.References[Offset]
 
 static inline void Ldbpb_BpaOff(qword offset); //BPB <- BPA.References[Offset]
-static inline void Ldbpb_BpbOff(qword offset); //BPB <- BPB.References[Offset]
 /* Buffer Stack Instructions */
 static inline void Ldbfo(); //BSFO <- BSP
 

@@ -23,7 +23,7 @@ void freeBPB() { Dealloc_Bpb(); }
 /* Helper macros & functions */
 #define decodeFirstReg(VAL) VAL >> 4
 #define decodeSecondReg(VAL) VAL & 0b00001111
-#define INITIAL_stack_limit 2
+#define INITIAL_STACK_LIMIT 2
 
 #define getByteImm() *(PC++)
 static inline word getWordImm();
@@ -33,15 +33,15 @@ void initVM(byte* code, int code_length) {
     CB = new_array(byte, code_length);
     memcpy(CB, code, code_length);
 
-    SB = new_array(qword, INITIAL_stack_limit);
+    SB = new_array(qword, INITIAL_STACK_LIMIT);
     SP = 0;
-    stack_limit = INITIAL_stack_limit;
+    stack_limit = INITIAL_STACK_LIMIT;
 
-    BufferStack = new_array(struct Buffer*, INITIAL_stack_limit);
+    BufferStack = new_array(struct Buffer*, INITIAL_STACK_LIMIT);
     BSP = 0;
-    bufferStackLimit = INITIAL_stack_limit;
+    bufferStackLimit = INITIAL_STACK_LIMIT;
 
-    for (int i = 0; i < INITIAL_stack_limit; i ++) {
+    for (int i = 0; i < INITIAL_STACK_LIMIT; i ++) {
         BufferStack[i] = NULL;
     }
 
@@ -409,9 +409,6 @@ int executeInstruction() {
         case LDB_BPBOFFIMM:
             Ldb_BpbOffImm(getQwordImm());
             break;
-        case LDM_BPAOFFIMM_BPA:
-            Ldm_BpaOffImm_Bpa(getQwordImm());
-            break;
         case LDM_BPAOFFIMM_BPB:
             Ldm_BpaOffImm_Bpb(getQwordImm());
             break;
@@ -472,6 +469,18 @@ int executeInstruction() {
         case LDA_BPAOFFB:
             Lda_BpaOffB();
             break;
+        case LDM_BPAOFFB_A:
+            Ldm_BpaOffB_A();
+            break;
+        case LDM_BPBOFFB_A:
+            Ldm_BpbOffB_A();
+            break;
+        case LDM_BPBOFFA_B:
+            Ldm_BpbOffA_B();
+            break;
+        case LDM_BPAOFFA_B:
+            Ldm_BpaOffA_B();
+            break;
         case BUILTIN:
             HandleBuiltin(getByteImm());
             break;
@@ -517,7 +526,7 @@ void ensureStackAccomodations(int numQwords) {
 
         expand_array(qword, SB, old_size, stack_limit);
 
-    } else if (stack_used <= (stack_limit / 4) && (stack_limit / 2) > INITIAL_stack_limit) {
+    } else if (stack_used <= (stack_limit / 4) && (stack_limit / 2) > INITIAL_STACK_LIMIT) {
         int old_size = stack_limit;
         stack_limit /= 2;
 
@@ -1126,18 +1135,6 @@ static inline void Ldm_BpbOffB_Bpb() {
     BPB->References[REG_B] = BPB;
 }
 
-static inline void Ldbpa_BpaOffImm(qword offset) {
-    BPA = BPA->References[offset];
-}
-
-static inline void Ldbpa_BpaOffA() {
-    BPA = BPA->References[REG_A];
-}
-
-static inline void Ldbpa_BpaOffB() {
-    BPA = BPA->References[REG_B];
-}
-
 static inline void Ldbpa_BpbOffImm(qword offset) {
     BPA = BPB->References[offset];
 }
@@ -1162,16 +1159,20 @@ static inline void Ldbpb_BpaOffB() {
     BPB = BPA->References[REG_B];
 }
 
-static inline void Ldbpb_BpbOffImm(qword offset) {
-    BPB = BPA->References[offset];
+static inline void Ldm_BpaOffB_A() {
+    BPA->QwordBuffer[REG_B] = REG_A;
 }
 
-static inline void Ldbpb_BpbOffA() {
-    BPB = BPA->References[REG_A];
+static inline void Ldm_BpbOffB_A() {
+    BPB->QwordBuffer[REG_B] = REG_A;
 }
 
-static inline void Ldbpb_BpbOffB() {
-    BPB = BPA->References[REG_B];
+static inline void Ldm_BpbOffA_B() {
+    BPB->QwordBuffer[REG_A] = REG_B;
+}
+
+static inline void Ldm_BpaOffA_B() {
+    BPA->QwordBuffer[REG_A] = REG_B;
 }
 
 static inline void Ldbpsfo() {
