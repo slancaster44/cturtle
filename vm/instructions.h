@@ -224,11 +224,11 @@ enum Opcode {
     LDBPB_BFONOFFB,
     LDBPB_BSPNOFFB,
 
-    PUSH_BPA, //
-    PUSH_BPB, //
+    PUSH_BPA, //FI SI
+    PUSH_BPB, //FI SI
     
-    POP_BPA, //
-    POP_BPB, //
+    POP_BPA, //FI SI
+    POP_BPB, //FI SI
 
     ALLOC_BPA, //FI SI
     ALLOC_BPB, //FI SI

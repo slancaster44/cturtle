@@ -1,0 +1,8 @@
+Fix Lexer character & String handling
+Finish vm buffer handling
+Write parser
+Write analyser
+Write code generator
+Debugger
+Better error messages
+Memory cleanup

@@ -26,17 +26,21 @@ struct Lexer newLexer(char* filename) {
     }
 
     l.singleCharMap = newMap();
-    setPair(l.singleCharMap, "(", LPAREN);
-    setPair(l.singleCharMap, ")", RPAREN);
-    setPair(l.singleCharMap, "\n", EOS);
+    setPair(l.singleCharMap, "(", LPAREN_TT);
+    setPair(l.singleCharMap, ")", RPAREN_TT);
+    setPair(l.singleCharMap, "=", EQ_TT);
+    setPair(l.singleCharMap, "+", PLUS_TT);
+    setPair(l.singleCharMap, "-", MINUS_TT);
+    setPair(l.singleCharMap, "/", DIV_TT);
+    setPair(l.singleCharMap, "*", MUL_TT);
+    setPair(l.singleCharMap, "\n", EOS_TT);
 
     l.doubleCharMap = newMap();
-    setPair(l.doubleCharMap, "==", BOOL_EQ);
-    setPair(l.doubleCharMap, "!=", BOOL_NE);
+    setPair(l.doubleCharMap, "==", BOOL_EQ_TT);
+    setPair(l.doubleCharMap, "!=", BOOL_NE_TT);
 
     l.keywordMap = newMap();
-    setPair(l.keywordMap, "let", LET);
-    setPair(l.keywordMap, "func", FUNC);
+    setPair(l.keywordMap, "let", LET_TT);
 
     return l;
 }
@@ -52,7 +56,7 @@ void deleteLexer(struct Lexer* l) {
 
 /* Tokanization Utilty Functions & Macros */
 #define RET_IF_TOK_VALID(TOK) \
-    if (TOK.Type != INVALID) { return TOK; }
+    if (TOK.Type != INVALID_TT) { return TOK; }
 
 void singleCharTok(struct Lexer* l, struct Token* t);
 void doubleCharTok(struct Lexer* l, struct Token* t);
@@ -75,6 +79,13 @@ struct Token newToken(struct Lexer* l) {
     t.line = l->curLine;
 
     skipWhitespace(l);
+
+    if (feof(l->fp)) {
+        t.Contents = new_array(char, 4);
+        strcpy(t.Contents, "EOF\0");
+        t.Type = EOF_TT;
+        return t;
+    }
 
     doubleCharTok(l, &t);
     RET_IF_TOK_VALID(t);
@@ -111,7 +122,7 @@ void singleCharTok(struct Lexer* l, struct Token* t) {
 
     int tt = lookup(l->singleCharMap, curStr);
     if (tt == -1) {
-        t->Type = INVALID;
+        t->Type = INVALID_TT;
         ungetc(curStr[0], l->fp);
         free(curStr);
         return;
@@ -129,7 +140,7 @@ void doubleCharTok(struct Lexer* l, struct Token* t) {
 
     int tt = lookup(l->doubleCharMap, curStr);
     if (tt == -1) {
-        t->Type = INVALID;
+        t->Type = INVALID_TT;
         ungetc(curStr[1], l->fp);
         ungetc(curStr[0], l->fp);
         free(curStr);
@@ -160,7 +171,7 @@ void keywordTok(struct Lexer* l, struct Token* t) {
 
     t->Type = lookup(l->keywordMap, curStr);
     if (t->Type == -1) {
-        t->Type = IDENT;
+        t->Type = IDENT_TT;
     }
 
     t->Contents = curStr;
@@ -168,14 +179,14 @@ void keywordTok(struct Lexer* l, struct Token* t) {
 
 void numberTok(struct Lexer* l, struct Token* t) {
     char* curStr = new_array(char, 1);
-    t->Type = INT;
+    t->Type = INT_TT;
 
     int location = 0;
     int curStrSize = 1;
     char curChar = getc(l->fp);
     while (isNumber(curChar) || curChar == '.') {
         if (curChar == '.') {
-            t->Type = FLT;
+            t->Type = FLT_TT;
         }
 
         curStr[location] = curChar;
@@ -196,7 +207,7 @@ void charTok(struct Lexer* l, struct Token* t) {
     char* value = new_array(char, 2);
     value[0] = getc(l->fp);
     value[1] = '\0';
-    t->Type = CHAR;
+    t->Type = CHAR_TT;
 
     if (getc(l->fp) != '\'') {
         printf("Expected closing quote on character");
@@ -208,7 +219,7 @@ void charTok(struct Lexer* l, struct Token* t) {
 
 void strTok(struct Lexer* l, struct Token* t) {
     char* curStr = new_array(char, 1);
-    t->Type = STR;
+    t->Type = STR_TT;
 
     int location = 0;
     int curStrSize = 1;
@@ -251,4 +262,21 @@ int isNumber(char c) {
 
 int isAlphaOrNumber(char c) {
     return isNumber(c) || isAlpha(c);
+}
+
+void deleteToken(struct Token* t) {
+    free(t->filename);
+    free(t->Contents);
+}
+
+void copyToken(struct Token* dest, struct Token* src) {
+    dest->column = src->column;
+    dest->line = src->line;
+    dest->Type = src->Type;
+
+    dest->Contents = new_array(char, strlen(src->Contents) + 1);
+    strcpy(dest->Contents, src->Contents);
+
+    dest->filename = new_array(char, strlen(src->filename) + 1);
+    strcpy(dest->filename, src->filename);
 }

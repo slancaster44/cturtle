@@ -82,3 +82,15 @@ tdb_make_run:
 tdb_clean:
 	@rm -rf vm/*.gch vm/*.o vm/*.out vm/*.so tdb/*.o tdb/*.out tdb/*.so tdb/*.gch
 	@rm -rf $(TDB_TARGET)
+
+PRS_SRC := parser/test.c parser/parser.c parser/ast.c lexer/lexer.c hash/hash.c common/test.c
+PRS_HDR := parser/ast.h parser/parser.h 
+PRS_TARGET := parser/test
+
+prs_make_test:
+	$(CC) $(CCFLAGS) -Ilexer -Ihash -Icommon $(PRS_HDR) $(PRS_SRC)
+	@rm -rf lexer/*.gch lexer/*.o lexer/*.out lexer/*.so hash/*.gch parser/*.gch
+	@mv a.out $(PRS_TARGET)
+
+prs_make_run: prs_make_test
+	$(PRS_TARGET)

@@ -1,20 +1,42 @@
-#119.96 ms
 
-let add = func(int x, int y) int
-{
-    x + y
-}
+func add(int x, int y) int
+    return x + y
+end
 
-let a = 10
-let b = "Some String"
-let c = 'c'
+func mkGreeting(str greeting) func(str)
+    func retFn(str name)
+        print(greeting, name)
+    end
 
-let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-let numbers = append(numbers, 0)
+    return retFn
+end
 
-let numbers =
-    foreach i 0..9
-        i
+let sayHello = mkGreeting("Hello")
+sayHello("World")
 
-type byte =
-    int 0..255
+struct Person
+    str name,
+    int age,
+    func(self) printInfo
+end
+
+func NewPerson(str name, int age) Person
+    func printHelper(self)
+        print(self.name, "is", self.age, "years old.")
+    end
+
+    Person(name, age, printHelper)
+end
+
+let John = NewPerson("John", 32)
+let Jim = NewPerson("Jim", 27)
+
+let People = list[Person] {Jim, John}
+
+for person in People
+    person.printInfo()
+end
+
+
+
+

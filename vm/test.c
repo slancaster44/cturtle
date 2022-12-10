@@ -1270,6 +1270,47 @@ void testBuffer() {
     freeBPA();
 }
 
+void testBufferStack() {
+    byte code[49] = {
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPA,
+        LDM_BPAOFFIMM_IMM,
+        list8bitImm(0x00),
+        list8bitImm(0x0A),
+        PUSH_BPA,
+        POP_BPB,
+        LDB_BPBOFFIMM,
+        list8bitImm(0x00),
+        EXIT,
+    };
+    Execute(code, 49);
+    assert(getB() == 0x0A, "PUSH_BPA, POP_BPB");
+    freeBPB();
+
+    byte code1[49] = {
+        LDQBS_IMM,
+        list8bitImm(0x01),
+        LDRBS_IMM,
+        list8bitImm(0x00),
+        ALLOC_BPB,
+        LDM_BPBOFFIMM_IMM,
+        list8bitImm(0x00),
+        list8bitImm(0x0A),
+        PUSH_BPB,
+        POP_BPA,
+        LDB_BPAOFFIMM,
+        list8bitImm(0x00),
+        EXIT,
+    };
+    Execute(code1, 49);
+    assert(getB() == 0x0A, "PUSH_BPB, POP_BPA");
+    freeBPA();
+
+}
+
 int main() {
     byte code[28] = {
         LDA_IMM,
@@ -1289,9 +1330,10 @@ int main() {
     };
 
     //Execute(code, 28);
-   // testStack();
+    //testStack();
    // testControl();
    // testMaths();
-    testBuffer();
+    //testBuffer();
+    testBufferStack();
     return 0;
 }

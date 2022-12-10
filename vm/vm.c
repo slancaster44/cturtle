@@ -53,6 +53,9 @@ void initVM(byte* code, int code_length) {
     codelen = code_length;
 
     PC = CB;
+
+    REG_A = 0;
+    REG_B = 0;
 }
 
 int executeInstruction() {
@@ -481,6 +484,18 @@ int executeInstruction() {
         case LDM_BPAOFFA_B:
             Ldm_BpaOffA_B();
             break;
+        case PUSH_BPA:
+            Push_Bpa();
+            break;
+        case PUSH_BPB:
+            Push_Bpb();
+            break;
+        case POP_BPA:
+            Pop_Bpa();
+            break;
+        case POP_BPB:
+            Pop_Bpb();
+            break;
         case BUILTIN:
             HandleBuiltin(getByteImm());
             break;
@@ -521,16 +536,34 @@ void ensureStackAccomodations(int numQwords) {
     int stack_used = SP + numQwords;
 
     if (stack_used >= stack_limit) {
-        int old_size = stack_limit;
+        int old_size = SP;
         stack_limit = stack_used * 2;
 
         expand_array(qword, SB, old_size, stack_limit);
 
     } else if (stack_used <= (stack_limit / 4) && (stack_limit / 2) > INITIAL_STACK_LIMIT) {
-        int old_size = stack_limit;
+        int old_size = SP;
         stack_limit /= 2;
 
         shrink_array(qword, SB, old_size, stack_limit);
+    }
+}
+
+void ensureBufferStackAccomodations(int numBuffers) {
+    int stack_used = BSP + numBuffers;
+
+    if (stack_used >= bufferStackLimit) {
+        int old_size = BSP;
+        bufferStackLimit = stack_used * 2;
+
+        expand_array(struct Buffer*, BufferStack, old_size, bufferStackLimit);
+
+    } else if (stack_used <= (bufferStackLimit / 4) &&
+        (bufferStackLimit / 2) > INITIAL_STACK_LIMIT) {
+            int old_size = BSP;
+            bufferStackLimit /= 2;
+
+            shrink_array(struct Buffer*, BufferStack, old_size, bufferStackLimit);
     }
 }
 
@@ -1177,6 +1210,28 @@ static inline void Ldm_BpaOffA_B() {
 
 static inline void Ldbpsfo() {
     BSFO = BSP;
+}
+
+static inline void Push_Bpa() {
+    ensureBufferStackAccomodations(1);
+    BufferStack[BSP] = BPA;
+    BSP ++;
+}
+
+static inline void Pop_Bpb() {
+    BSP --;
+    BPB = BufferStack[BSP];
+}
+
+static inline void Push_Bpb() {
+    ensureBufferStackAccomodations(1);
+    BufferStack[BSP] = BPB;
+    BSP ++;
+}
+
+static inline void Pop_Bpa() {
+    BSP --;
+    BPA = BufferStack[BSP];
 }
 
 static inline void HandleBuiltin(byte imm) {

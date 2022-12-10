@@ -41,7 +41,7 @@ void testKeyword() {
     struct Token t = newToken(&l);
     assert(t.Type == LET, "LET");
     
-   struct Token t4 = newToken(&l);
+    struct Token t4 = newToken(&l);
     assert(t4.Type == EOS, "EOS");
 
     struct Token t2 = newToken(&l);

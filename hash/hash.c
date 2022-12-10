@@ -21,7 +21,8 @@ struct Map* newMap() {
 void deleteMap(struct Map* m) {
     for (int i = 0; i < m->capacity; i ++) {
         if (m->pairs[i] != NULL) {
-            free(m->pairs[i]->Key);
+            if (m->pairs[i]->Key != NULL) 
+                free(m->pairs[i]->Key);
             free(m->pairs[i]);
         }
     }
@@ -62,6 +63,25 @@ void setPair(struct Map* m, char* key, int value) {
 
 }
 
+void setPairInt(struct Map* m, int key, int value) {
+    struct Pair* pairToAdd = new(struct Pair);
+    pairToAdd->Value = value;
+    pairToAdd->keyHash = key;
+    pairToAdd->Key = NULL;
+
+    if (m->capacity * ALLOC_THRESHOLD < m->pairsUsed + 1) {
+        expandMap(m);
+    }
+
+    uint32_t location = key % m->capacity;
+    while (m->pairs[location] != NULL) {
+        location = (location + 1) % m->capacity;
+    }
+
+    m->pairs[location] = pairToAdd;
+    m->pairsUsed ++;
+}
+
 void expandMap(struct Map* m) {
     uint32_t new_capacity = (m->capacity + 1) * 2;
     struct Pair** newSet = new_array(struct Pair*, new_capacity);
@@ -97,6 +117,18 @@ int lookup(struct Map* m, char* key) {
 
     } while (location != starting_location);
     
+    return -1;
+}
+
+int lookupInt(struct Map* m, int key) {
+    uint32_t location = key % m->capacity;
+    uint32_t starting_location = location;
+    do {
+        if (m->pairs[location] != NULL && m->pairs[location]->keyHash == key) {
+            return m->pairs[location]->Value;
+        }
+        location = (location + 1) % m->capacity;
+    } while (location != starting_location);
     return -1;
 }
 

@@ -23,6 +23,18 @@ void test() {
     assert(lookup(m, "Monkey") == 13, "Test 4");
 
     deleteMap(m);
+
+    m = newMap();
+    setPairInt(m, 10, 11);
+    setPairInt(m, 11, 12);
+    setPairInt(m, 13, 14);
+    setPairInt(m, 14, 15);
+
+    assert(lookupInt(m, 10) == 11, "Test 5");
+    assert(lookupInt(m, 11) == 12, "Test 6");
+    assert(lookupInt(m, 14) == 15, "Test 7");
+    assert(lookupInt(m, 13) == 14, "Test 8");
+    deleteMap(m);
 }
 
 

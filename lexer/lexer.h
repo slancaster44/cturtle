@@ -6,19 +6,33 @@
 #include <stdio.h>
 
 enum TokenType {
-    INVALID,
-    EOS, /* End of statement */
-    IDENT,
-    CHAR,
-    INT,
-    FLT,
-    STR,
-    LPAREN,
-    RPAREN,
-    BOOL_EQ,
-    BOOL_NE,
-    LET,
-    FUNC,
+    EOF_TT,
+    INVALID_TT,
+    EOS_TT, /* End of statement */
+    IDENT_TT,
+    CHAR_TT,
+    INT_TT,
+    FLT_TT,
+    STR_TT,
+    LPAREN_TT,
+    RPAREN_TT,
+
+    LET_TT,
+    FUNC_TT,
+    EQ_TT,
+
+    PLUS_TT,
+    MINUS_TT,
+    DIV_TT,
+    MUL_TT,
+
+    BOOL_EQ_TT,
+    BOOL_NE_TT,
+    BOOL_LT_TT,
+    BOOL_GT_TT,
+    BOOL_LE_TT,
+    BOOL_GE_TT,
+    NOT_TT,
 };
 
 struct Token {
@@ -47,6 +61,7 @@ void deleteLexer(struct Lexer* l);
 
 struct Token newToken(struct Lexer* l);
 void deleteToken(struct Token* t);
+void copyToken(struct Token* dest, struct Token* src);
 
 void printToken(struct Token* t);
 #endif
