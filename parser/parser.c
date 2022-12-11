@@ -36,7 +36,9 @@ struct Parser newParser(char* filename) {
 
     retVal.precMap = newMap();
     setPair(retVal.precMap, "+", 1);
+    setPair(retVal.precMap, "-", 1);
     setPair(retVal.precMap, "*", 2);
+    setPair(retVal.precMap, "/", 2);
 
     retVal.curTok = NULL;
 
@@ -60,6 +62,7 @@ void deleteParser(struct Parser p) {
 }
 
 void ParseStmt(struct Parser* p) {
+    deleteCurNode(p);
     prattParse(p, 0);
 }
 
@@ -117,7 +120,6 @@ void parsePrefix(struct Parser* p) {
 }
 
 void parseInt(struct Parser* p) {
-    deleteCurNode(p);
     p->curNode = new(struct Node);
 
     p->curNode->nt = INT_NT;
@@ -131,7 +133,6 @@ void parseInt(struct Parser* p) {
 }
 
 void parseFlt(struct Parser* p) {
-    deleteCurNode(p);
     p->curNode = new(struct Node);
 
     p->curNode->nt = FLT_NT;
@@ -144,7 +145,6 @@ void parseFlt(struct Parser* p) {
 }
 
 void parseChr(struct Parser* p) {
-    deleteCurNode(p);
     p->curNode = new(struct Node);
 
     p->curNode->nt = CHR_NT;
@@ -164,6 +164,12 @@ bool parseInfix(struct Parser* p) {
     case MUL_TT:
         parseBinOp(p);
         return true;
+    case DIV_TT:
+        parseBinOp(p);
+        return true;
+    case MINUS_TT:
+        parseBinOp(p);
+        return true;
     default:
         return false;
     }
@@ -173,13 +179,11 @@ bool parseInfix(struct Parser* p) {
 
 void parseBinOp(struct Parser* p) {
     struct Node* LHS = p->curNode;
-    p->curNode = NULL; //Keeps the parser from deleting the LHS
 
     struct Node* result = new(struct Node);
 
     result->as.BinOp = new(struct BinOp);
     result->as.BinOp->LHS = LHS;
-
     result->nt = BINOP_NT;
     result->tok = new(struct Token);
     copyToken(result->tok, p->curTok);

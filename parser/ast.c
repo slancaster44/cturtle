@@ -49,6 +49,11 @@ void deleteNode(struct Node* n) {
     case CHR_NT:
         free(n->as.Chr);
         break;
+    case BINOP_NT:
+        deleteNode(n->as.BinOp->LHS);
+        deleteNode(n->as.BinOp->RHS);
+        free(n->as.BinOp->Op);
+        break;
     default:
         printf("Could not free node\n");
         exit(1);

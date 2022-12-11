@@ -19,9 +19,6 @@ void assert(int expr, char* name) {
 }
 
 
-#define list8bitImm(VAL) \
-    VAL, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-
 void testMaths() {
     byte codeSUB_A_B[20] = {
         LDA_IMM,

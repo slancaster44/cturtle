@@ -1,6 +1,10 @@
 #ifndef INS_H
 #define INS_H
 
+
+#define list8bitImm(VAL) \
+    VAL, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
 enum Opcode {
     NIL,
     NOP,

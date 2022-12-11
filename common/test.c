@@ -9,3 +9,4 @@ void assert(int expr, char* name) {
         printf("%s Failed\n", name);
     }
 }
+

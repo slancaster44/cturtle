@@ -83,14 +83,28 @@ tdb_clean:
 	@rm -rf vm/*.gch vm/*.o vm/*.out vm/*.so tdb/*.o tdb/*.out tdb/*.so tdb/*.gch
 	@rm -rf $(TDB_TARGET)
 
-PRS_SRC := parser/test.c parser/parser.c parser/ast.c lexer/lexer.c hash/hash.c common/test.c
+PRS_SRC := parser/parser.c parser/ast.c lexer/lexer.c hash/hash.c common/test.c
 PRS_HDR := parser/ast.h parser/parser.h 
 PRS_TARGET := parser/test
 
 prs_make_test:
-	$(CC) $(CCFLAGS) -Ilexer -Ihash -Icommon $(PRS_HDR) $(PRS_SRC)
+	$(CC) $(CCFLAGS) -Ilexer -Ihash -Icommon $(PRS_HDR) $(PRS_SRC) parser/test.c
 	@rm -rf lexer/*.gch lexer/*.o lexer/*.out lexer/*.so hash/*.gch parser/*.gch
 	@mv a.out $(PRS_TARGET)
 
 prs_make_run: prs_make_test
 	$(PRS_TARGET)
+
+GEN_SRC := codegen/codegen.c codegen/symtab.c $(PRS_SRC)
+GEN_HDR := codegen/symtab.h codegen/codegen.h
+GEN_INC := -Ihash -Icommon -Ivm -Iparser -Ilexer
+GEN_TARGET := codegen/test
+
+gen_make_test:
+	$(CC) $(CCFLAGS) $(GEN_INC) $(GEN_HDR) $(GEN_SRC) codegen/test.c
+	@mv a.out $(GEN_TARGET)
+	@rm -rf $(find . -name "*.gch" 2>/dev/null) $(find . -name "*.o" 2>/dev/null) $(find . -name "*.out" 2>/dev/null)
+
+gen_run_test: gen_make_test
+	$(GEN_TARGET)
+	@rm -rf $(GEN_TARGET)
