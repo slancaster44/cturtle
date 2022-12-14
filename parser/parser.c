@@ -41,6 +41,7 @@ struct Parser newParser(char* filename) {
     setPair(retVal.precMap, "/", 2);
 
     retVal.curTok = NULL;
+    retVal.curNode = NULL;
 
     return retVal;
 }

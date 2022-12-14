@@ -7,6 +7,10 @@
 #define word uint16_t
 #define qword uint64_t
 
+#define bool uint8_t
+#define true 1
+#define false 0
+
 
 static qword REG_A;    /* General purpose register */
 static qword REG_B;    /* General purpose register */
@@ -20,17 +24,22 @@ static int SP;
 static int stack_limit; //In qwords
 static qword* SB; /* Starting address of stack */
 
+static bool ExitFlag;
+
 void Execute(byte* code, int code_length);
-void initVm(byte* code, int code_length);
+void initVM(byte* code, int code_length);
 int executeInstruction(); /* Returns 0 if no more to execute */
 
 /* Debug Utility */
 void printRegs();
 void printStack();
+byte* getPC();
+byte* getCB();
 qword getA();
 qword getB();
 qword peakBp(qword off);
 void freeBP();
+bool getExitFlag();
 
 /* Expands stack if there is not enough space
  * to add a value of a given size 

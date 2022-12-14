@@ -18,7 +18,10 @@ struct Buffer* getBPA() { return BPA; }
 struct Buffer* getBPB() { return BPB; }
 void freeBPA() { Dealloc_Bpa(); }
 void freeBPB() { Dealloc_Bpb(); }
-
+bool getExitFlag() { return ExitFlag; }
+byte* getPC() { return PC; }
+int getCodeLen() { return codelen; }
+byte* getCB() { return CB; }
 
 /* Helper macros & functions */
 #define decodeFirstReg(VAL) VAL >> 4
@@ -509,6 +512,7 @@ int executeInstruction() {
     return 1;
 
     exit:
+        ExitFlag = true;
         free(CB);
         free(SB);
 
@@ -517,7 +521,7 @@ int executeInstruction() {
 
 void Execute(byte* code, int code_length) {
     initVM(code, code_length);
-    while (executeInstruction()) {}
+    while (executeInstruction());
 }
 
 static inline word getWordImm() {
@@ -1266,7 +1270,7 @@ void printRegs() {
 
 void printStack() {
     printf("Stack:\n");
-    for (int count = SP; count >= 0; count--) {
+    for (int count = SP-1; count >= 0; count--) {
         printf("%lX: %lX\n", (qword) count, SB[count]);
     }
 }
