@@ -23,12 +23,11 @@ struct TurtleBinary {
     byte* code;
 };
 
-
 struct TurtleBinary* newBinary();
 void deleteTurtleBinary(struct TurtleBinary* tb);
 void writeCode(struct TurtleBinary* tb, byte* code, int lengthOfNewCode);
 
-struct TurtleBinary readTurtleFile(char* filename);
+struct TurtleBinary* readTurtleFile(char* filename);
 void writeTurtleFile(struct TurtleBinary* tb, char* filename);
 
 #endif

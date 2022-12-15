@@ -2,6 +2,8 @@
 #include "mem_mac.h"
 
 #include <string.h>
+#include <stdio.h>
+#include <math.h>
 
 struct TurtleBinary* newBinary() {
     struct TurtleBinary* tb = new(struct TurtleBinary);
@@ -32,4 +34,51 @@ void writeCode(struct TurtleBinary* tb, byte* code, int lengthOfNewCode) {
     }
 
     memcpy(tb->code + oldCodelen, code, lengthOfNewCode);
+}
+
+void writeTurtleFile(struct TurtleBinary* tb, char* filename) {
+    FILE* fp = fopen(filename, "w");
+
+    for (int i = 0; i < MAGIC_NUMBER_WIDTH; i ++) {
+        fputc(tb->MagicNumber[i], fp);
+    }
+    
+    byte* value = (byte*) &tb->codelen;
+    for (int i = 0; i < sizeof(qword); i ++) {
+        fputc(value[i], fp);
+    }
+
+    for (int i = 0; i < tb->codelen; i++) {
+        fputc(tb->code[i], fp);
+    }
+
+    fclose(fp);
+}
+
+struct TurtleBinary* readTurtleFile(char* filename) {
+    struct TurtleBinary* retVal = newBinary();
+
+    FILE* fp = fopen(filename, "r");
+    char magic[MAGIC_NUMBER_WIDTH];
+
+    for (int i = 0; i < MAGIC_NUMBER_WIDTH; i ++) {
+        magic[i] = getc(fp);
+    }
+    
+    if (strcmp(magic, MAGIC_NUMBER)) {
+        printf("Invalid Magic Number\n");
+        exit(1);
+    }
+
+    for (int i = 0; i < sizeof(qword); i++) {
+        retVal->codelen += getc(fp) * ((qword) powl((double) 256, (double) i));
+    }
+
+    retVal->code = new_array(byte, retVal->codelen);
+    for (int i = 0; i < retVal->codelen; i++) {
+        retVal->code[i] = getc(fp);
+    }
+
+    fclose(fp);
+    return retVal;
 }

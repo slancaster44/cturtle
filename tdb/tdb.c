@@ -92,6 +92,9 @@ void Decompile(byte* code, int codelen) {
             printf("mul a, 0x%hhX\n", code[i+1]);
             i += sizeof(qword);
             break;
+        case EXIT:
+            printf("exit\n");
+            break;
         default:
             printf("Cannot decompile opcode '%d'\n", code[i]);
             exit(1);

@@ -108,3 +108,19 @@ gen_make_test:
 gen_run_test: gen_make_test
 	$(GEN_TARGET)
 	@rm -rf $(GEN_TARGET)
+
+MAIN_SRC := main.c $(GEN_SRC) tbin/tbin.c
+MAIN_HDR := 
+MAIN_INC := -Icodegen -Iparser -Ilexer -Ihash -Icommon -Ivm -Itdb -Itbin
+MAIN_TARGET := cturtle
+
+default:
+	$(CC) $(CCFLAGS) $(MAIN_INC) $(MAIN_HDR) $(MAIN_SRC)
+	@mv a.out $(MAIN_TARGET)
+	@rm -rf $(find . -name "*.gch" 2>/dev/null) $(find . -name "*.o" 2>/dev/null) $(find . -name "*.out" 2>/dev/null)
+
+run: default
+	./$(MAIN_TARGET) -c testsrc/test.trtl
+	./$(MAIN_TARGET) -d ./output.tbin
+	@rm -rf $(MAIN_TARGET)
+
