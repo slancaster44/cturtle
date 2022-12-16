@@ -92,6 +92,34 @@ void Decompile(byte* code, int codelen) {
             printf("mul a, 0x%hhX\n", code[i+1]);
             i += sizeof(qword);
             break;
+        case EQ_A_B:
+            printf("eq a, b\n");
+            break;
+        case NE_A_B:
+            printf("ne a, b\n");
+            break;
+        case OR_A_B:
+            printf("or a, b\n");
+            break;
+        case AND_A_B:
+            printf("and a, b\n");
+            break;
+        case EQ_A_IMM:
+            printf("eq a, 0x%hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case NE_A_IMM:
+            printf("ne a, 0x%hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case AND_A_IMM:
+            printf("and a, 0x%hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case OR_A_IMM:
+            printf("or a, 0x%hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
         case EXIT:
             printf("exit\n");
             break;

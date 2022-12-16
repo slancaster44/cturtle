@@ -27,7 +27,13 @@ void testInfix() {
     printNode(p.curNode);
 }
 
+void test() {
+    struct Parser p = newParser("testsrc/test.trtl");
+    ParseStmt(&p);
+    printNode(p.curNode);
+}
+
 int main() {
     //testParsePrimatives();
-    testInfix();
+    test();
 }

@@ -1,0 +1,71 @@
+Basic Boolean Operators
+    ==
+    !=
+    ||
+    &&
+
+If-Else Statements
+    if <condition>
+        ...
+    elif <condition>
+        ...
+    else
+        ...
+    end
+
+Characters
+
+Print Builtin
+
+While Loop Statements
+    while <condition>
+        ...
+    end
+
+    do
+        ...
+    while <condition>
+
+Let Statements
+    let <value> = <expression>
+
+Lists
+    [type]{<value, <value>}
+
+Garbage Collection
+
+Finish Buffer Instruction Set
+
+For Loop Statements
+    for <ident> in <list>
+        ...
+    end
+
+    for <ident> from <value> to <value>
+        ...
+    end
+
+List Operators
+    union
+    append
+
+Functions
+    func <ident>(<type> <ident>, ...)
+        ...
+    end
+
+Structs
+    struct <ident>
+        <type> <ident>
+        ...
+    end
+
+Floating Point Numbers
+
+Strings
+
+Fix Character & String Lexing
+
+All unimplemented operators
+
+Cleanup Types (qword, etc);

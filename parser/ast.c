@@ -32,6 +32,10 @@ void printNodeHelper(struct Node* n, char* tab, char ext) {
         printf("%sLHS:\n", completeTab);
         printNodeHelper(n->as.BinOp->LHS, completeTab, '\t');
         break;
+    case BOOL_NT:
+        if (n->as.Bool->Value) { printf("Boolean: true\n"); }
+        else { printf("Boolean: false\n"); }
+        break;
     default:
         printf("Invalid Node\n");
         exit(1);
@@ -48,6 +52,9 @@ void deleteNode(struct Node* n) {
         break;
     case CHR_NT:
         free(n->as.Chr);
+        break;
+    case BOOL_NT:
+        free(n->as.Bool);
         break;
     case BINOP_NT:
         deleteNode(n->as.BinOp->LHS);

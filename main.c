@@ -3,6 +3,7 @@
 #include "mem_mac.h"
 #include "instructions.h"
 #include "tdb.h"
+#include "vm.h"
 #include "tbin.h"
 
 #include <string.h>
@@ -40,6 +41,10 @@ int main(int argc, char* argv[]) {
     } else if (!strcmp(argv[1], "--debug") || !strcmp(argv[1], "-d")) {
         checkFilename;
         debug(argv[2]);
+        return 0;
+    } else if (!strcmp(argv[1], "--run") || !strcmp(argv[1], "-r")) {
+        checkFilename;
+        executeBin(argv[2]);
         return 0;
     } else {
         printf("Invalid Command Line Argument");

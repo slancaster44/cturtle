@@ -32,7 +32,12 @@ enum TokenType {
     BOOL_GT_TT,
     BOOL_LE_TT,
     BOOL_GE_TT,
+    BOOL_OR_TT,
+    BOOL_AND_TT,
     NOT_TT,
+
+    TRUE_TT,
+    FALSE_TT,
 };
 
 struct Token {

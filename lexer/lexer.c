@@ -38,9 +38,13 @@ struct Lexer newLexer(char* filename) {
     l.doubleCharMap = newMap();
     setPair(l.doubleCharMap, "==", BOOL_EQ_TT);
     setPair(l.doubleCharMap, "!=", BOOL_NE_TT);
+    setPair(l.doubleCharMap, "||", BOOL_OR_TT);
+    setPair(l.doubleCharMap, "&&", BOOL_AND_TT);
 
     l.keywordMap = newMap();
     setPair(l.keywordMap, "let", LET_TT);
+    setPair(l.keywordMap, "true", TRUE_TT);
+    setPair(l.keywordMap, "false", FALSE_TT);
 
     return l;
 }

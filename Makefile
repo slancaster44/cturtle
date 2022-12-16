@@ -17,8 +17,6 @@ vm_run_test:
 vm_clean:
 	rm -rf vm/*.gch vm/*.o vm/*.out vm/*.so $(VM_TARGET)
 
-vm_lib:
-
 HASH_SRC := hash/hash.c
 HASH_HDR := common/mem_mac.h hash/hash.h
 HASH_TARGET := hash/hast_test

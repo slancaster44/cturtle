@@ -23,6 +23,7 @@ bool parseInfix(struct Parser* p); //returns true on success
 void parseInt(struct Parser* p);
 void parseFlt(struct Parser* p);
 void parseChr(struct Parser* p);
+void parseBool(struct Parser* p);
 
 void parseBinOp(struct Parser* p);
 /********/
@@ -35,10 +36,14 @@ struct Parser newParser(char* filename) {
     memcpy(retVal.lex, &newLex, sizeof(struct Lexer));
 
     retVal.precMap = newMap();
-    setPair(retVal.precMap, "+", 1);
-    setPair(retVal.precMap, "-", 1);
-    setPair(retVal.precMap, "*", 2);
-    setPair(retVal.precMap, "/", 2);
+    setPair(retVal.precMap, "==", 2);
+    setPair(retVal.precMap, "!=", 2);
+    setPair(retVal.precMap, "||", 1);
+    setPair(retVal.precMap, "&&", 1);
+    setPair(retVal.precMap, "+", 3);
+    setPair(retVal.precMap, "-", 3);
+    setPair(retVal.precMap, "*", 4);
+    setPair(retVal.precMap, "/", 4);
 
     retVal.curTok = NULL;
     retVal.curNode = NULL;
@@ -114,6 +119,12 @@ void parsePrefix(struct Parser* p) {
     case CHAR_TT:
         parseChr(p);
         break;
+    case TRUE_TT:
+        parseBool(p);
+        break;
+    case FALSE_TT:
+        parseBool(p);
+        break;
     default:
         printf("Invalid Token '%s'\n", p->curTok->Contents);
         exit(1);
@@ -130,6 +141,19 @@ void parseInt(struct Parser* p) {
 
     p->curNode->as.Int = new(struct IntNode);
     p->curNode->as.Int->Value = atoi(p->curTok->Contents);
+    setCurTok(p);
+}
+
+void parseBool(struct Parser* p) {
+    p->curNode = new(struct Node);
+
+    p->curNode->nt = BOOL_NT;
+
+    p->curNode->tok = new(struct Token);
+    copyToken(p->curNode->tok, p->curTok);
+
+    p->curNode->as.Bool = new(struct BoolNode);
+    p->curNode->as.Bool->Value = p->curTok->Type == TRUE_TT;
     setCurTok(p);
 }
 
@@ -169,6 +193,18 @@ bool parseInfix(struct Parser* p) {
         parseBinOp(p);
         return true;
     case MINUS_TT:
+        parseBinOp(p);
+        return true;
+    case BOOL_EQ_TT:
+        parseBinOp(p);
+        return true;
+    case BOOL_NE_TT:
+        parseBinOp(p);
+        return true;
+    case BOOL_OR_TT:
+        parseBinOp(p);
+        return true;
+    case BOOL_AND_TT:
         parseBinOp(p);
         return true;
     default:
