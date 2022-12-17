@@ -37,8 +37,7 @@ void printNodeHelper(struct Node* n, char* tab, char ext) {
         else { printf("Boolean: false\n"); }
         break;
     default:
-        printf("Invalid Node\n");
-        exit(1);
+        node_panic(n, "Could not print node\n");
     }
 }
 
@@ -62,8 +61,7 @@ void deleteNode(struct Node* n) {
         free(n->as.BinOp->Op);
         break;
     default:
-        printf("Could not free node\n");
-        exit(1);
+        node_panic(n, "Could not free node\n");
     }
 
     free(n->tok->Contents);

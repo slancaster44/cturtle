@@ -17,8 +17,7 @@
  */
 
 #include <inttypes.h>
-
-#define qword uint64_t
+#include "common_types.h"
 
 struct Buffer {
     int numQwords;

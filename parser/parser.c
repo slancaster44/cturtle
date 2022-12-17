@@ -2,11 +2,8 @@
 #include "lexer.h"
 #include "mem_mac.h"
 #include "hash.h"
-#include "type_check.h"
-
-typedef int bool;
-#define true 1
-#define false 0
+#include "panic.h"
+#include "common_types.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +24,7 @@ void parseChr(struct Parser* p);
 void parseBool(struct Parser* p);
 
 void parseBinOp(struct Parser* p);
+enum ReturnType CheckTypeBinOp(struct Parser* p, char* op, enum ReturnType lhs_type, enum ReturnType rhs_type);
 
 /********/
 
@@ -127,8 +125,10 @@ void parsePrefix(struct Parser* p) {
         parseBool(p);
         break;
     default:
-        printf("Invalid Token '%s'\n", p->curTok->Contents);
-        exit(1);
+        panic(p->curTok->line, 
+            p->curTok->column, 
+            p->curTok->filename, 
+            "Unexpected token '%s'", p->curTok->Contents); 
     }
 }
 
@@ -242,7 +242,7 @@ void parseBinOp(struct Parser* p) {
     prattParse(p, prec);
 
     result->as.BinOp->RHS = p->curNode;
-    result->rt = CheckTypeBinOp(result->as.BinOp->Op, result->as.BinOp->LHS->rt, result->as.BinOp->RHS->rt);
+    result->rt = CheckTypeBinOp(p, result->as.BinOp->Op, result->as.BinOp->LHS->rt, result->as.BinOp->RHS->rt);
 
     p->curNode = result;
 }

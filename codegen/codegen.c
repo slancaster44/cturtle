@@ -6,11 +6,6 @@
 
 #include <string.h>
 
-#define panic(MSG) { \
-    printf("%s", MSG); \
-    exit(1); \
-}
-
 void pushStackFrame(struct CodeGenerator* cg);
 void popStackFrame(struct CodeGenerator* cg);
 
@@ -97,8 +92,7 @@ byte* compileExpr(struct CodeGenerator* cg, struct Node* expr) {
         return compileBinOp(cg, expr);
         break;
     default:
-        printf("Could not generate code for expression type '%d'\n", expr->nt);
-        exit(1);
+        node_panic(expr, "Could not generate code for '%s'\n", expr->tok->Contents);
     }
 }
 
@@ -183,12 +177,13 @@ byte* compileBinOp(struct CodeGenerator* cg, struct Node* infixExpr) {
         output_code[compositeCodeSize++] = opcode;
         break;
     default:
-        panic("Invalid RHS");
+        node_panic(infixExpr, "Invalid RHS\n");
         break;
     }
 
     if (opcode == 255) 
-       panic("Could not compile for operator\n");
+        node_panic(infixExpr, "Could not compile for operator '%s'\n", infixExpr->as.BinOp->Op);
+
 
     cg->codeSize = compositeCodeSize; 
 

@@ -4,6 +4,7 @@
 #include "ast.h"
 #include "lexer.h"
 #include "hash.h"
+#include "panic.h"
 
 struct Parser {
     struct Lexer* lex;
@@ -15,5 +16,9 @@ struct Parser {
 struct Parser newParser(char* filename);
 void deleteParser(struct Parser p);
 void ParseStmt(struct Parser* p);
+
+#define parser_panic(PARSER, ...) { \
+    panic(PARSER->curTok->line, PARSER->curTok->column,  PARSER->curTok->filename, __VA_ARGS__); \
+}
 
 #endif

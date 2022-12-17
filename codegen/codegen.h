@@ -5,8 +5,7 @@
 #include "symtab.h"
 
 #include <inttypes.h>
-
-typedef uint8_t byte;
+#include "common_types.h"
 
 struct CodeGenerator {
     int symbolStackDepth;

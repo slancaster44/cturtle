@@ -11,8 +11,7 @@
 
 #include <stdint.h>
 
-#define byte uint8_t
-#define qword uint64_t
+#include "common_types.h"
 
 #define MAGIC_NUMBER_WIDTH 12
 #define MAGIC_NUMBER "#!/bin/tvm \n"

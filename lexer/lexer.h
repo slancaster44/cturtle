@@ -69,4 +69,8 @@ void deleteToken(struct Token* t);
 void copyToken(struct Token* dest, struct Token* src);
 
 void printToken(struct Token* t);
+
+#define lexer_panic(LEXER, ...) \
+    panic(LEXER->curLine, LEXER->curColumn, LEXER->filename, __VA_ARGS__)
+    
 #endif

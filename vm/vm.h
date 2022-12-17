@@ -3,14 +3,7 @@
 
 #include <stdint.h>
 
-#define byte uint8_t
-#define word uint16_t
-#define qword uint64_t
-
-#define bool uint8_t
-#define true 1
-#define false 0
-
+#include "common_types.h"
 
 static qword REG_A;    /* General purpose register */
 static qword REG_B;    /* General purpose register */

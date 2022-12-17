@@ -2,8 +2,8 @@
 #define AST_H
 
 #include "lexer.h"
-
-typedef int bool;
+#include "panic.h"
+#include "common_types.h"
 
 enum NodeType {
     INT_NT,
@@ -62,5 +62,8 @@ struct BoolNode {
 
 void deleteNode(struct Node* n);
 void printNode(struct Node* n);
+
+#define node_panic(NODE, ...) \
+    panic(NODE->tok->line, NODE->tok->column, NODE->tok->filename, __VA_ARGS__)
 
 #endif

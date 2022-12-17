@@ -2,7 +2,7 @@
 #define TDB_H
 
 #include <inttypes.h>
-typedef uint8_t byte;
+#include "common_types.h"
 
 void DebugRawByteCode(byte* code, int codelen);
 void Decompile(byte* code, int codelen);

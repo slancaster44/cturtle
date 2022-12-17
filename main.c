@@ -4,6 +4,7 @@
 #include "instructions.h"
 #include "tdb.h"
 #include "vm.h"
+#include "panic.h"
 #include "tbin.h"
 
 #include <string.h>
@@ -11,12 +12,8 @@
 #include <stdio.h>
 #include <inttypes.h>
 
-#define panic(MSG) \
-    printf("%s", MSG); \
-    exit(1);
-
 #define checkFilename \
-    if (argc < 3) { panic("No filename provided\n"); } 
+    if (argc < 3) { panic(0, 0, "unknown.trtl", "Filename not provided"); } 
 
 
 void printHelp();

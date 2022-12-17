@@ -114,8 +114,7 @@ struct Token newToken(struct Lexer* l) {
         return t;
     }
 
-    printf("Invalid Token '%c'\n", curChar); //TODO: Better error message
-    exit(1);
+    lexer_panic(l, "Invalid character '%c'\n", curChar);
     return t;
 }
 
@@ -214,8 +213,7 @@ void charTok(struct Lexer* l, struct Token* t) {
     t->Type = CHAR_TT;
 
     if (getc(l->fp) != '\'') {
-        printf("Expected closing quote on character");
-        exit(1);
+        lexer_panic(l, "Expected closing quote\n");
     }
 
     t->Contents = value;
@@ -239,8 +237,7 @@ void strTok(struct Lexer* l, struct Token* t) {
     }
 
     if (feof(l->fp)) {
-        printf("Expected closing quote on string\n");
-        exit(1);
+        panic(l, "Expected closing quote\n");
     }
 
     curStr[location] = '\0';
