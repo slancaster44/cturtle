@@ -14,6 +14,16 @@ enum NodeType {
     BINOP_NT,
 };
 
+/* Type the node returns when evaluated */
+enum ReturnType {
+    INVALID_RT, /* Returned when a value is invalid */
+    NULL_RT, /* Statements will use this as their return type */
+    INT_RT,
+    BOOL_RT,
+    FLT_RT,
+    CHR_RT,
+};
+
 struct Node {
     union {
         struct IntNode* Int;
@@ -25,6 +35,7 @@ struct Node {
 
     struct Token* tok;
     enum NodeType nt;
+    enum ReturnType rt;
 };
 
 struct IntNode {

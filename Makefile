@@ -81,8 +81,8 @@ tdb_clean:
 	@rm -rf vm/*.gch vm/*.o vm/*.out vm/*.so tdb/*.o tdb/*.out tdb/*.so tdb/*.gch
 	@rm -rf $(TDB_TARGET)
 
-PRS_SRC := parser/parser.c parser/ast.c lexer/lexer.c hash/hash.c common/test.c
-PRS_HDR := parser/ast.h parser/parser.h 
+PRS_SRC := parser/parser.c parser/ast.c lexer/lexer.c hash/hash.c common/test.c parser/type_check.c
+PRS_HDR := parser/ast.h parser/parser.h parser/type_check.h
 PRS_TARGET := parser/test
 
 prs_make_test:

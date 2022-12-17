@@ -2,6 +2,7 @@
 #include "lexer.h"
 #include "mem_mac.h"
 #include "hash.h"
+#include "type_check.h"
 
 typedef int bool;
 #define true 1
@@ -26,6 +27,7 @@ void parseChr(struct Parser* p);
 void parseBool(struct Parser* p);
 
 void parseBinOp(struct Parser* p);
+
 /********/
 
 struct Parser newParser(char* filename) {
@@ -63,8 +65,7 @@ void deleteParser(struct Parser p) {
     }
 
     if (p.curNode != NULL) 
-        deleteNode(p.curNode);
-    
+        deleteNode(p.curNode); 
 }
 
 void ParseStmt(struct Parser* p) {
@@ -141,6 +142,8 @@ void parseInt(struct Parser* p) {
 
     p->curNode->as.Int = new(struct IntNode);
     p->curNode->as.Int->Value = atoi(p->curTok->Contents);
+
+    p->curNode->rt = INT_RT;
     setCurTok(p);
 }
 
@@ -154,6 +157,8 @@ void parseBool(struct Parser* p) {
 
     p->curNode->as.Bool = new(struct BoolNode);
     p->curNode->as.Bool->Value = p->curTok->Type == TRUE_TT;
+
+    p->curNode->rt = BOOL_RT;
     setCurTok(p);
 }
 
@@ -166,6 +171,8 @@ void parseFlt(struct Parser* p) {
 
     p->curNode->as.Flt = new(struct FltNode);
     p->curNode->as.Flt->Value = atof(p->curTok->Contents);
+
+    p->curNode->rt = FLT_RT;
     setCurTok(p);
 }
 
@@ -178,6 +185,8 @@ void parseChr(struct Parser* p) {
 
     p->curNode->as.Chr = new(struct ChrNode);
     p->curNode->as.Chr->Value = p->curTok->Contents[0];
+
+    p->curNode->rt = CHR_RT;
     setCurTok(p);
 }
 
@@ -233,5 +242,7 @@ void parseBinOp(struct Parser* p) {
     prattParse(p, prec);
 
     result->as.BinOp->RHS = p->curNode;
+    result->rt = CheckTypeBinOp(result->as.BinOp->Op, result->as.BinOp->LHS->rt, result->as.BinOp->RHS->rt);
+
     p->curNode = result;
 }
