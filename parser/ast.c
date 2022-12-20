@@ -5,6 +5,8 @@
 #include <stdlib.h>
 
 void printNodeHelper(struct Node* n, char* tab, char ext);
+void printBlock(struct Block* b, char* tab, char ext);
+void free_block(struct Block* b);
 
 void printNode(struct Node* n) {
     printNodeHelper(n, "", ' ');
@@ -36,8 +38,27 @@ void printNodeHelper(struct Node* n, char* tab, char ext) {
         if (n->as.Bool->Value) { printf("Boolean: true\n"); }
         else { printf("Boolean: false\n"); }
         break;
+    case IFEL_NT:
+        printf("If Else:\n");
+        for (int i = 0; i < n->as.IfEl->numBlocks; i++) {
+            printNodeHelper(n->as.IfEl->Conditions[i], completeTab, '\t');
+            printBlock(n->as.IfEl->Blocks[i], completeTab, '\t');
+            printf("\n");
+        }
+        printf("%s%cElse\n", completeTab, '\t');
+        printBlock(n->as.IfEl->ElseBlock, completeTab, '\t');
+        break;
     default:
         node_panic(n, "Could not print node\n");
+    }
+}
+
+void printBlock(struct Block* b, char* tab, char ext) {
+    char* completeTab = new_array(char, strlen(tab) + 2);
+    sprintf(completeTab, "%s%c", tab, ext);
+    printf("%sBlock:\n", completeTab);
+    for (int i = 0; i < b->numStatements; i++) {
+        printNodeHelper(b->Statements[i], completeTab, '\t');
     }
 }
 
@@ -59,6 +80,17 @@ void deleteNode(struct Node* n) {
         deleteNode(n->as.BinOp->LHS);
         deleteNode(n->as.BinOp->RHS);
         free(n->as.BinOp->Op);
+        free(n->as.BinOp);
+        break;
+    case IFEL_NT:
+        for (int i = 0; i < n->as.IfEl->numBlocks; i++) {
+            deleteNode(n->as.IfEl->Conditions[i]);
+            free_block(n->as.IfEl->Blocks[i]);
+        }
+        free(n->as.IfEl->Blocks);
+        free(n->as.IfEl->Conditions);
+        free_block(n->as.IfEl->ElseBlock);
+        free(n->as.IfEl);
         break;
     default:
         node_panic(n, "Could not free node\n");
@@ -67,4 +99,10 @@ void deleteNode(struct Node* n) {
     free(n->tok->Contents);
     free(n->tok);
     free(n);
+}
+
+void free_block(struct Block* b) {
+    for (int i = 0; i < b->numStatements; i++) {
+        deleteNode(b->Statements[i]);
+    }
 }

@@ -58,6 +58,7 @@ void debugPrint(byte* code, int codelen) {
 
 void Decompile(byte* code, int codelen) {
     for (int i = 0; i < codelen; i ++) {
+        printf("0x%04X ", i);
         if (getPC() - getCB() == i)
             printf("> ");
         else
@@ -118,6 +119,14 @@ void Decompile(byte* code, int codelen) {
             break;
         case OR_A_IMM:
             printf("or a, 0x%hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case JPA_Z_OFF:
+            printf("jpa z, 0x%hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case JP_OFF:
+            printf("jp 0x%hhX\n", code[i+1]);
             i += sizeof(qword);
             break;
         case EXIT:

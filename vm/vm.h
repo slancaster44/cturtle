@@ -165,8 +165,8 @@ static inline void Le_B_Imm(qword imm); //FI SI
 static inline void Jpa_Offset(qword off); //FI SI
 static inline void Jpb_Offset(qword off); //FI SI
 static inline void Jp_Offset(qword off); //FI SI
-static inline void Jpa_Nz_Offset(qword off); //FI SI
-static inline void Jpb_Nz_Offset(qword off); //FI SI
+static inline void Jpb_Z_Offset(qword off);
+static inline void Jpa_Z_Offset(qword off);
 
 static inline void Call_Offset(qword off); //FI SI
 static inline void Ret(); //FI SI

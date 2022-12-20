@@ -18,6 +18,8 @@ void prattParse(struct Parser* p, int precedence);
 void parsePrefix(struct Parser* p);
 bool parseInfix(struct Parser* p); //returns true on success
 
+void parseIfElse(struct Parser* p);
+
 void parseInt(struct Parser* p);
 void parseFlt(struct Parser* p);
 void parseChr(struct Parser* p);
@@ -123,6 +125,9 @@ void parsePrefix(struct Parser* p) {
         break;
     case FALSE_TT:
         parseBool(p);
+        break;
+    case IF_TT:
+        parseIfElse(p);
         break;
     default:
         panic(p->curTok->line, 
@@ -243,6 +248,102 @@ void parseBinOp(struct Parser* p) {
 
     result->as.BinOp->RHS = p->curNode;
     result->rt = CheckTypeBinOp(p, result->as.BinOp->Op, result->as.BinOp->LHS->rt, result->as.BinOp->RHS->rt);
+
+    p->curNode = result;
+}
+
+/* Utility function
+ * determines if a given token exists within a set of tokens
+ */
+bool in_tokenType(enum TokenType curTokType, enum TokenType* terminators, int numTerminators) {
+    for (int i = 0; i < numTerminators; i++) {
+        if (curTokType == terminators[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/* Parses statements until a token is reached that matches
+ * one of the given terminating tokens
+ */
+struct Block* parseBlock(struct Parser* p, enum TokenType* terminators, int numTerminators) {
+    struct Block* retVal = new(struct Block);
+    retVal->Statements = NULL;
+    retVal->numStatements = 0;
+
+    while (!in_tokenType(p->curTok->Type, terminators, numTerminators)) {
+        retVal->numStatements++;
+        
+        if (retVal->Statements == NULL) {
+            retVal->Statements = new_array(struct Node*, retVal->numStatements);
+        } else {
+            expand_array(struct Node*, retVal->Statements, retVal->numStatements, retVal->numStatements+1);
+        }
+
+        prattParse(p, 0);
+        retVal->Statements[retVal->numStatements-1] = p->curNode;
+        skipWhitespaceAndSetTok(p);
+    }
+
+    return retVal;
+}
+
+void parseIfElse(struct Parser* p) {
+    struct Node* result = new(struct Node);
+    result->tok = new(struct Token)
+    copyToken(result->tok, p->curTok);
+    result->nt = IFEL_NT;
+    result->rt = NULL_RT;
+
+    result->as.IfEl = new(struct IfElseNode);
+
+    result->as.IfEl->numBlocks = 1;
+    result->as.IfEl->Conditions = new_array(struct Node*, result->as.IfEl->numBlocks);
+    result->as.IfEl->Blocks = new_array(struct Block*, result->as.IfEl->numBlocks);
+
+    enum TokenType terminators[4] = {ELIF_TT, ELSE_TT, END_TT, EOF_TT};
+    
+    do {
+        setCurTok(p); /* Move over if/elif token */
+
+        prattParse(p, 0); /* Parse condition for this branch */
+        int index = result->as.IfEl->numBlocks-1;
+        result->as.IfEl->Conditions[index] = p->curNode;
+
+        if (p->curTok->Type != COLON_TT) {
+            parser_panic(p, "Expected ':' got '%s'\n", p->curTok->Contents);
+        }
+        setCurTok(p);
+
+        result->as.IfEl->Blocks[index] = parseBlock(p, terminators, 4);
+        expand_array(struct Node*, result->as.IfEl->Conditions, result->as.IfEl->numBlocks, result->as.IfEl->numBlocks+1); /*But why?*/
+        expand_array(struct Block*, result->as.IfEl->Blocks, result->as.IfEl->numBlocks, result->as.IfEl->numBlocks+1);
+        result->as.IfEl->numBlocks++;
+        skipWhitespaceAndSetTok(p);
+
+    } while (p->curTok->Type == ELIF_TT);
+    result->as.IfEl->numBlocks--;
+
+    if (p->curTok->Type == END_TT) {
+        result->as.IfEl->ElseBlock = NULL;
+        setCurTok(p); /* Skip over 'end' */
+
+    } else if (p->curTok->Type == ELSE_TT) {
+        setCurTok(p); /* Skip over 'else' */
+        result->as.IfEl->ElseBlock = parseBlock(p, terminators, 4);
+
+        if (p->curTok->Type != END_TT) {
+            parser_panic(p, "Expected 'end,' got '%s'\n", p->curTok->Contents);
+        }
+    } else {
+        parser_panic(p, "Expected 'else' or 'end' token, got '%s'\n", p->curTok->Contents);
+    }
+
+    if (p->curTok->Type != END_TT) {
+        parser_panic(p, "Expected 'end' token got '%s'\n", p->curTok->Contents);
+    }
+    setCurTok(p);
 
     p->curNode = result;
 }

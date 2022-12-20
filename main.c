@@ -22,6 +22,9 @@ void debug(char* filename);
 void compile(char* filename);
 
 int main(int argc, char* argv[]) {
+    compile("testsrc/test.trtl");
+    debug("./output.tbin");
+    return 0;
     if (argc < 2) {
         printf("No Arguments\n");
         printHelp();

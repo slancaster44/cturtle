@@ -129,8 +129,6 @@ enum Opcode {
 
     JPA_OFF,       /* if (A != 0): PC <- CB + Offset64 */
     JPB_OFF,       /* if (B != 0): PC <- CB + Offset64 */
-    JPA_NZ_OFF,
-    JPB_NZ_OFF,
     JPB_Z_OFF,
     JPA_Z_OFF,
     JP_OFF,        /* PC <- CB + Offset64 */

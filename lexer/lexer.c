@@ -33,6 +33,7 @@ struct Lexer newLexer(char* filename) {
     setPair(l.singleCharMap, "-", MINUS_TT);
     setPair(l.singleCharMap, "/", DIV_TT);
     setPair(l.singleCharMap, "*", MUL_TT);
+    setPair(l.singleCharMap, ":", COLON_TT);
     setPair(l.singleCharMap, "\n", EOS_TT);
 
     l.doubleCharMap = newMap();
@@ -45,6 +46,10 @@ struct Lexer newLexer(char* filename) {
     setPair(l.keywordMap, "let", LET_TT);
     setPair(l.keywordMap, "true", TRUE_TT);
     setPair(l.keywordMap, "false", FALSE_TT);
+    setPair(l.keywordMap, "if", IF_TT);
+    setPair(l.keywordMap, "else", ELSE_TT);
+    setPair(l.keywordMap, "elif", ELIF_TT);
+    setPair(l.keywordMap, "end", END_TT);
 
     return l;
 }
@@ -237,7 +242,7 @@ void strTok(struct Lexer* l, struct Token* t) {
     }
 
     if (feof(l->fp)) {
-        panic(l, "Expected closing quote\n");
+        lexer_panic(l, "Expected closing quote\n");
     }
 
     curStr[location] = '\0';

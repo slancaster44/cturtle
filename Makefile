@@ -1,5 +1,5 @@
 CC := clang
-CCFLAGS := -g -lm -Icommon -lefence #-O3
+CCFLAGS := -g -lm -Icommon #-lefence #-O3
 
 VM_SRC := vm/vm.c
 VM_HDR := vm/instructions.h common/mem_mac.h vm/vm.h
@@ -82,7 +82,7 @@ tdb_clean:
 	@rm -rf $(TDB_TARGET)
 
 PRS_SRC := parser/parser.c parser/ast.c lexer/lexer.c hash/hash.c common/test.c parser/type_check.c
-PRS_HDR := parser/ast.h parser/parser.h parser/type_check.h
+PRS_HDR := parser/ast.h parser/parser.h
 PRS_TARGET := parser/test
 
 prs_make_test:
@@ -118,7 +118,6 @@ default:
 	@rm -rf $(find . -name "*.gch" 2>/dev/null) $(find . -name "*.o" 2>/dev/null) $(find . -name "*.out" 2>/dev/null)
 
 run: default
-	./$(MAIN_TARGET) -c testsrc/test.trtl
-	./$(MAIN_TARGET) -d ./output.tbin
+	./$(MAIN_TARGET) 
 	@rm -rf $(MAIN_TARGET)
 

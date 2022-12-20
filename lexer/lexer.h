@@ -2,6 +2,7 @@
 #define LEXER_H
 
 #include "hash.h"
+#include "panic.h"
 
 #include <stdio.h>
 
@@ -19,7 +20,12 @@ enum TokenType {
 
     LET_TT,
     FUNC_TT,
+    IF_TT,
+    ELSE_TT,
+    END_TT,
     EQ_TT,
+    ELIF_TT,
+    COLON_TT,
 
     PLUS_TT,
     MINUS_TT,

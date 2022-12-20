@@ -10,7 +10,7 @@ enum NodeType {
     FLT_NT,
     CHR_NT,
     BOOL_NT,
-
+    IFEL_NT,
     BINOP_NT,
 };
 
@@ -31,11 +31,17 @@ struct Node {
         struct ChrNode* Chr;
         struct BinOp* BinOp;
         struct BoolNode* Bool;
+        struct IfElseNode* IfEl;
     } as;
 
     struct Token* tok;
     enum NodeType nt;
     enum ReturnType rt;
+};
+
+struct Block {
+    struct Node** Statements;
+    int numStatements;
 };
 
 struct IntNode {
@@ -58,6 +64,13 @@ struct BinOp {
 
 struct BoolNode {
     bool Value;
+};
+
+struct IfElseNode {
+    int numBlocks;
+    struct Node** Conditions;
+    struct Block** Blocks;
+    struct Block* ElseBlock;
 };
 
 void deleteNode(struct Node* n);

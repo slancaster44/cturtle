@@ -343,11 +343,11 @@ int executeInstruction() {
         case JPA_OFF:
             Jpa_Offset(getQwordImm());
             break;
-        case JPA_NZ_OFF:
-            Jpa_Nz_Offset(getQwordImm());
+        case JPA_Z_OFF:
+            Jpa_Z_Offset(getQwordImm());
             break;
-        case JPB_NZ_OFF:
-            Jpb_Nz_Offset(getQwordImm());
+        case JPB_Z_OFF:
+            Jpb_Z_Offset(getQwordImm());
             break;
         case CALL_OFF:
             Call_Offset(getQwordImm());
@@ -962,13 +962,13 @@ static inline void Jp_Offset(qword off){
     PC = CB + off;
 }
 
-static inline void Jpa_Nz_Offset(qword off) {
-    if (REG_A != 0)
+static inline void Jpa_Z_Offset(qword off) {
+    if (REG_A == 0)
         PC = CB + off;
 }
 
-static inline void Jpb_Nz_Offset(qword off) {
-    if (REG_B != 0)
+static inline void Jpb_Z_Offset(qword off) {
+    if (REG_B == 0)
         PC = CB + off;
 }
 
