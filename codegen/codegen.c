@@ -14,6 +14,7 @@ byte* compileInt(struct CodeGenerator* cg, struct Node* intExpr);
 byte* compileBool(struct CodeGenerator* cg, struct Node* boolExpr);
 byte* compileBinOp(struct CodeGenerator* cg, struct Node* infixExpr);
 byte* compileIfElse(struct CodeGenerator* cg, struct Node* ifelStmt);
+byte* compileWhile(struct CodeGenerator* cg, struct Node* whileStmt);
 
 void intToByteArray(uint64_t value, byte* outputBuffer);
 
@@ -97,6 +98,9 @@ byte* compileExpr(struct CodeGenerator* cg, struct Node* expr) {
         break;
     case IFEL_NT:
         return compileIfElse(cg, expr);
+        break;
+    case WHILE_NT:
+        return compileWhile(cg, expr);
         break;
     default:
         node_panic(expr, "Could not generate code for '%s'\n", expr->tok->Contents);
@@ -284,3 +288,33 @@ byte* compileIfElse(struct CodeGenerator* cg, struct Node* ifelStmt) {
     return output_code;
 }
 
+byte* compileWhile(struct CodeGenerator* cg, struct Node* whileStmt) {
+    byte* blockCode = compileBlock(cg, whileStmt->as.While->Block);
+    int blockSize = cg->codeSize;
+
+    byte* conditionCode = compileExpr(cg, whileStmt->as.While->Condition);
+    int conditionSize = cg->codeSize;
+
+    byte* jmpInstruction = new_array(byte, 1 + sizeof(qword));
+
+    byte* output_code = new_array(byte, blockSize + conditionSize + 1 + sizeof(qword));
+    if (whileStmt->as.While->isDoWhile) {
+        memcpy(output_code, blockCode, blockSize);
+        memcpy(output_code + blockSize, conditionCode, conditionSize);
+
+        jmpInstruction[0] = JPA_OFF;
+        copyIntToByteArray((uint64_t) cg->curAddress, jmpInstruction + 1);
+        memcpy(output_code + blockSize + conditionSize, jmpInstruction, 1 + sizeof(qword));
+    } else {
+        memcpy(output_code, conditionCode, conditionSize);
+    
+        jmpInstruction[0] = JPA_Z_OFF;
+        copyIntToByteArray((uint64_t) cg->curAddress + blockSize + 1 + sizeof(qword) + conditionSize, jmpInstruction + 1);
+        memcpy(output_code + conditionSize, jmpInstruction, 1 + sizeof(qword));
+
+        memcpy(output_code + conditionSize + 1 + sizeof(qword), blockCode, blockSize);
+    }
+
+    cg->codeSize = conditionSize + blockSize + 1 + sizeof(qword);
+    return output_code;
+}

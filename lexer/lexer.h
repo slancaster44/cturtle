@@ -20,6 +20,8 @@ enum TokenType {
 
     LET_TT,
     FUNC_TT,
+    WHILE_TT,
+    DO_TT,
     IF_TT,
     ELSE_TT,
     END_TT,

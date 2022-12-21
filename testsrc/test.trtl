@@ -1,7 +1,8 @@
-if 10 == 10:
-    3
-elif 11 == 11:
-    2
-else
-    1
+while false:
+    10
 end
+
+
+do
+    16
+while true

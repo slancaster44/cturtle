@@ -12,6 +12,7 @@ enum NodeType {
     BOOL_NT,
     IFEL_NT,
     BINOP_NT,
+    WHILE_NT,
 };
 
 /* Type the node returns when evaluated */
@@ -32,6 +33,7 @@ struct Node {
         struct BinOp* BinOp;
         struct BoolNode* Bool;
         struct IfElseNode* IfEl;
+        struct WhileNode* While;
     } as;
 
     struct Token* tok;
@@ -71,6 +73,12 @@ struct IfElseNode {
     struct Node** Conditions;
     struct Block** Blocks;
     struct Block* ElseBlock;
+};
+
+struct WhileNode {
+    struct Block* Block;
+    struct Node* Condition;
+    bool isDoWhile;
 };
 
 void deleteNode(struct Node* n);

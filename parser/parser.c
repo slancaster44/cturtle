@@ -19,6 +19,8 @@ void parsePrefix(struct Parser* p);
 bool parseInfix(struct Parser* p); //returns true on success
 
 void parseIfElse(struct Parser* p);
+void parseDoWhile(struct Parser* p);
+void parseWhile(struct Parser* p);
 
 void parseInt(struct Parser* p);
 void parseFlt(struct Parser* p);
@@ -128,6 +130,12 @@ void parsePrefix(struct Parser* p) {
         break;
     case IF_TT:
         parseIfElse(p);
+        break;
+    case WHILE_TT:
+        parseWhile(p);
+        break;
+    case DO_TT:
+        parseDoWhile(p);
         break;
     default:
         panic(p->curTok->line, 
@@ -336,14 +344,74 @@ void parseIfElse(struct Parser* p) {
         if (p->curTok->Type != END_TT) {
             parser_panic(p, "Expected 'end,' got '%s'\n", p->curTok->Contents);
         }
+        setCurTok(p);
     } else {
         parser_panic(p, "Expected 'else' or 'end' token, got '%s'\n", p->curTok->Contents);
     }
 
+
+    p->curNode = result;
+}
+
+void parseWhile(struct Parser* p) {
+    struct Node* result = new(struct Node);
+    result->tok = new(struct Token);
+    copyToken(result->tok, p->curTok);
+    result->nt = WHILE_NT;
+    result->rt = NULL_RT;
+    result->as.While = new(struct WhileNode);
+    result->as.While->isDoWhile = false;
+
+    setCurTok(p); /* Step over 'while' token */
+
+    prattParse(p, 0); 
+    result->as.While->Condition = p->curNode; 
+
+    if (result->as.While->Condition->rt != BOOL_RT) {
+        parser_panic(p, "While loop condition must return boolean value\n");
+    }
+
+    if (p->curTok->Type != COLON_TT) {
+        parser_panic(p, "Expected ':' got '%s'\n", p->curTok->Contents);
+    }
+    setCurTok(p); /* Step over colon */
+
+    enum TokenType terminators[2] = {END_TT, EOF_TT};
+    result->as.While->Block = parseBlock(p, terminators, 2);
+
     if (p->curTok->Type != END_TT) {
-        parser_panic(p, "Expected 'end' token got '%s'\n", p->curTok->Contents);
+        parser_panic(p, "Expected 'end' one while loop\n");
     }
     setCurTok(p);
+
+    p->curNode = result;
+}
+
+void parseDoWhile(struct Parser* p) {
+    struct Node* result = new(struct Node);
+    result->tok = new(struct Token);
+    copyToken(result->tok, p->curTok);
+    result->nt = WHILE_NT;
+    result->rt = NULL_RT;
+    result->as.While = new(struct WhileNode);
+    result->as.While->isDoWhile = true;
+
+    setCurTok(p); /* Step over 'do' token */
+
+    enum TokenType terminators[2] = {WHILE_TT, EOF_TT};
+    result->as.While->Block = parseBlock(p, terminators, 2);
+
+    if (p->curTok->Type != WHILE_TT) {
+        parser_panic(p, "Expected 'while' at the end of loop\n");
+    }
+    setCurTok(p);
+
+    prattParse(p, 0);
+    result->as.While->Condition = p->curNode;
+
+    if (result->as.While->Condition->rt != BOOL_RT) {
+        parser_panic(p, "While loop condition must return boolean value\n");
+    }
 
     p->curNode = result;
 }

@@ -89,8 +89,15 @@ void deleteNode(struct Node* n) {
         }
         free(n->as.IfEl->Blocks);
         free(n->as.IfEl->Conditions);
-        free_block(n->as.IfEl->ElseBlock);
+        if (n->as.IfEl->ElseBlock != NULL) {
+            free_block(n->as.IfEl->ElseBlock);
+        }
         free(n->as.IfEl);
+        break;
+    case WHILE_NT:
+        free_block(n->as.While->Block);
+        deleteNode(n->as.While->Condition);
+        free(n->as.While);
         break;
     default:
         node_panic(n, "Could not free node\n");

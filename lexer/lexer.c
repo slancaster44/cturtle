@@ -50,6 +50,8 @@ struct Lexer newLexer(char* filename) {
     setPair(l.keywordMap, "else", ELSE_TT);
     setPair(l.keywordMap, "elif", ELIF_TT);
     setPair(l.keywordMap, "end", END_TT);
+    setPair(l.keywordMap, "while", WHILE_TT);
+    setPair(l.keywordMap, "do", DO_TT);
 
     return l;
 }

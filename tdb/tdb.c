@@ -129,6 +129,10 @@ void Decompile(byte* code, int codelen) {
             printf("jp 0x%hhX\n", code[i+1]);
             i += sizeof(qword);
             break;
+        case JPA_OFF:
+            printf("jpa nz, 0x%hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
         case EXIT:
             printf("exit\n");
             break;
