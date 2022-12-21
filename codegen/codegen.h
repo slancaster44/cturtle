@@ -8,8 +8,6 @@
 #include "common_types.h"
 
 struct CodeGenerator {
-    int symbolStackDepth;
-    struct SymTab** symbolStack;
     struct Parser* parser;
 
     /* Maps math operators to their relavent operations */

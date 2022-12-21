@@ -4,6 +4,7 @@
 #include "hash.h"
 #include "panic.h"
 #include "common_types.h"
+#include "symtab.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +22,8 @@ bool parseInfix(struct Parser* p); //returns true on success
 void parseIfElse(struct Parser* p);
 void parseDoWhile(struct Parser* p);
 void parseWhile(struct Parser* p);
+void parseIdent(struct Parser* p);
+void parseLet(struct Parser* p);
 
 void parseInt(struct Parser* p);
 void parseFlt(struct Parser* p);
@@ -52,6 +55,9 @@ struct Parser newParser(char* filename) {
     retVal.curTok = NULL;
     retVal.curNode = NULL;
 
+    retVal.PrimativeSymbols = newSymtab();
+    retVal.CompositeSymbols = newSymtab();
+
     return retVal;
 }
 
@@ -68,6 +74,9 @@ void deleteParser(struct Parser p) {
 
     if (p.curNode != NULL) 
         deleteNode(p.curNode); 
+
+    deleteSymtab(p.PrimativeSymbols);
+    deleteSymtab(p.CompositeSymbols);
 }
 
 void ParseStmt(struct Parser* p) {
@@ -136,6 +145,12 @@ void parsePrefix(struct Parser* p) {
         break;
     case DO_TT:
         parseDoWhile(p);
+        break;
+    case LET_TT:
+        parseLet(p);
+        break;
+    case IDENT_TT:
+        parseIdent(p);
         break;
     default:
         panic(p->curTok->line, 
@@ -412,6 +427,61 @@ void parseDoWhile(struct Parser* p) {
     if (result->as.While->Condition->rt != BOOL_RT) {
         parser_panic(p, "While loop condition must return boolean value\n");
     }
+
+    p->curNode = result;
+}
+
+void parseLet(struct Parser* p) {
+    struct Node* result = new(struct Node);
+    result->tok = new(struct Token);
+    copyToken(result->tok, p->curTok);
+    result->nt = LET_NT;
+    result->rt = NULL_RT;
+    result->as.Let = new(struct LetNode);
+
+    setCurTok(p); /* Step over 'let' token */
+    if (p->curTok->Type != IDENT_TT) {
+        parser_panic(p, "Expected identifier, got '%s'\n", p->curTok->Contents);
+    }
+
+    result->as.Let->Identifier = new_array(char, strlen(p->curTok->Contents) + 1);
+    strcpy(result->as.Let->Identifier, p->curTok->Contents);
+
+    setCurTok(p);
+    if (p->curTok->Type != EQ_TT) {
+        parser_panic(p, "Expected '=' got '%s'\n", p->curTok->Contents);
+    }
+
+    setCurTok(p); /* Move over '=' */
+    prattParse(p, 0);
+
+    result->as.Let->Value = p->curNode;
+    struct SymbolInfo* si = new(struct SymbolInfo);
+    si->Type = p->curNode->rt;
+    addVariable(p->PrimativeSymbols, result->as.Let->Identifier, si);
+    /*Stack location inserted by 'addVariable' function */
+    result->as.Let->StackLocation = si->StackLocation;
+
+    p->curNode = result;
+}
+
+void parseIdent(struct Parser* p) {
+    struct Node* result = new(struct Node);
+    result->tok = new(struct Token);
+    copyToken(result->tok, p->curTok);
+    result->nt = IDENT_NT;
+
+    struct SymbolInfo* si = getVariable(p->PrimativeSymbols, p->curTok->Contents);
+    if (si == NULL) {
+        parser_panic(p, "No such variable '%s'\n", p->curTok->Contents);
+    }
+
+    result->rt = si->Type;
+    result->as.Ident = new(struct IdentifierNode);
+    result->as.Ident->StackLocation = si->StackLocation;
+
+    result->as.Ident->Identifier = result->tok->Contents;
+    setCurTok(p);
 
     p->curNode = result;
 }

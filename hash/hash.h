@@ -14,7 +14,7 @@ struct Map {
 struct Pair {
     char* Key;
     int keyHash;
-    int Value;
+    long long Value;
 };
 
 /* Construct & Destruct */
@@ -22,9 +22,9 @@ struct Map* newMap();
 void deleteMap(struct Map* m);
 
 /* Access */
-void setPair(struct Map* m, char* key, int value);
+void setPair(struct Map* m, char* key, long long value);
 void setPairInt(struct Map* m, int key, int value);
-int lookup(struct Map* m, char* key);
+long long lookup(struct Map* m, char* key);
 int lookupInt(struct Map* m, int key);
 
 /* Utility */

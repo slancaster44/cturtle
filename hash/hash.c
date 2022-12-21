@@ -28,6 +28,7 @@ void deleteMap(struct Map* m) {
     }
 
     free(m->pairs);
+    free(m);
 }
 
 uint32_t hashKey(char* key) {
@@ -42,7 +43,7 @@ uint32_t hashKey(char* key) {
     return hash;
 }
 
-void setPair(struct Map* m, char* key, int value) {
+void setPair(struct Map* m, char* key, long long value) {
     struct Pair* pairToAdd = new(struct Pair);
     pairToAdd->Value = value;
     pairToAdd->keyHash = hashKey(key);
@@ -106,7 +107,7 @@ void expandMap(struct Map* m) {
     m->capacity = new_capacity;
 }
 
-int lookup(struct Map* m, char* key) {
+long long lookup(struct Map* m, char* key) {
     uint32_t location = hashKey(key) % m->capacity;
     uint32_t starting_location = location;
     do {
@@ -135,7 +136,7 @@ int lookupInt(struct Map* m, int key) {
 void printMap(struct Map *m) {
     for (int i = 0; i < m->capacity; i++) {
         if (m->pairs[i] != NULL) {
-            printf("%s: %d\n", m->pairs[i]->Key, m->pairs[i]->Value);
+            printf("%s: %lld\n", m->pairs[i]->Key, m->pairs[i]->Value);
         }
     }
 }

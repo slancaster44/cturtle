@@ -29,8 +29,10 @@ void testInfix() {
 
 void test() {
     struct Parser p = newParser("testsrc/test.trtl");
-    ParseStmt(&p);
-    printNode(p.curNode);
+    while (p.curTok == NULL || p.curTok->Type != EOF) {
+        ParseStmt(&p);
+        printNode(p.curNode);
+    }
 }
 
 int main() {

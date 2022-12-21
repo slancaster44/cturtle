@@ -1,8 +1,8 @@
-while false:
-    10
+let a = 10
+let b = 11
+
+if true:
+    a
+else
+    b
 end
-
-
-do
-    16
-while true

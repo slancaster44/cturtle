@@ -2,6 +2,7 @@
 #define MEM_MACS
 
 #include <stdlib.h>
+#include <string.h>
 
 #define new(type) (type*) malloc(sizeof(type));
 

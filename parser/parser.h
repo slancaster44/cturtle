@@ -5,12 +5,15 @@
 #include "lexer.h"
 #include "hash.h"
 #include "panic.h"
+#include "symtab.h"
 
 struct Parser {
     struct Lexer* lex;
     struct Map* precMap;
     struct Token* curTok;
     struct Node* curNode;
+    struct Symtab* PrimativeSymbols; /*Ints, chars, and flts*/
+    struct Symtab* CompositeSymbols; /* lists, structs */
 };
 
 struct Parser newParser(char* filename);

@@ -48,6 +48,15 @@ void printNodeHelper(struct Node* n, char* tab, char ext) {
         printf("%s%cElse\n", completeTab, '\t');
         printBlock(n->as.IfEl->ElseBlock, completeTab, '\t');
         break;
+    case LET_NT:
+        printf("let %s ", n->as.Let->Identifier);
+        printf("at offset %lld\n", n->as.Let->StackLocation);
+        printf("%sValue:\n", completeTab);
+        printNodeHelper(n->as.Let->Value, completeTab, '\t');
+        break;
+    case IDENT_NT:
+        printf("Identifier '%s' at location %lld\n", n->as.Ident->Identifier, n->as.Ident->StackLocation);
+        break;
     default:
         node_panic(n, "Could not print node\n");
     }
@@ -99,8 +108,16 @@ void deleteNode(struct Node* n) {
         deleteNode(n->as.While->Condition);
         free(n->as.While);
         break;
+    case LET_NT:
+        free(n->as.Let->Identifier);
+        deleteNode(n->as.Let->Value);
+        free(n->as.Let);
+        break;
+    case IDENT_NT:
+        free(n->as.Ident); /*Identifier char* cleared when token freed */
+        break;
     default:
-        node_panic(n, "Could not free node\n");
+        node_panic(n, "Could not free node '%d'\n", n->nt);
     }
 
     free(n->tok->Contents);

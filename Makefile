@@ -81,7 +81,7 @@ tdb_clean:
 	@rm -rf vm/*.gch vm/*.o vm/*.out vm/*.so tdb/*.o tdb/*.out tdb/*.so tdb/*.gch
 	@rm -rf $(TDB_TARGET)
 
-PRS_SRC := parser/parser.c parser/ast.c lexer/lexer.c hash/hash.c common/test.c parser/type_check.c
+PRS_SRC := parser/parser.c parser/ast.c lexer/lexer.c hash/hash.c common/test.c parser/type_check.c parser/symtab.c
 PRS_HDR := parser/ast.h parser/parser.h
 PRS_TARGET := parser/test
 
@@ -93,8 +93,8 @@ prs_make_test:
 prs_make_run: prs_make_test
 	$(PRS_TARGET)
 
-GEN_SRC := codegen/codegen.c codegen/symtab.c $(TDB_SRC) $(VM_SRC) $(PRS_SRC)
-GEN_HDR := codegen/symtab.h codegen/codegen.h
+GEN_SRC := codegen/codegen.c  $(TDB_SRC) $(VM_SRC) $(PRS_SRC)
+GEN_HDR := codegen/symtab.h 
 GEN_INC := -Ihash -Icommon -Ivm -Iparser -Ilexer -Itdb
 GEN_TARGET := codegen/test
 

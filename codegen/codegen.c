@@ -6,9 +6,6 @@
 
 #include <string.h>
 
-void pushStackFrame(struct CodeGenerator* cg);
-void popStackFrame(struct CodeGenerator* cg);
-
 byte* compileExpr(struct CodeGenerator* cg, struct Node* expr);
 byte* compileInt(struct CodeGenerator* cg, struct Node* intExpr);
 byte* compileBool(struct CodeGenerator* cg, struct Node* boolExpr);
@@ -26,9 +23,6 @@ struct CodeGenerator* newCodeGenerator(char* filename) {
     memcpy(retVal->parser, &tempParser, sizeof(struct Parser));
 
     retVal->currentStatementCode = NULL;
-
-    retVal->symbolStackDepth = 0;
-    retVal->symbolStack = NULL; /*TODO*/
 
     retVal->curAddress = 0;
 
@@ -59,13 +53,6 @@ struct CodeGenerator* newCodeGenerator(char* filename) {
 void deleteCodeGenerator(struct CodeGenerator* cg) {
     deleteParser(*cg->parser);
     free(cg->parser);
-
-    for (int i = 0; i < cg->symbolStackDepth; i++) {
-        deleteSymTab(cg->symbolStack[i]);
-    }
-    
-    if (cg->symbolStack != NULL)
-        free(cg->symbolStack);
 
     if (cg->currentStatementCode != NULL)
         free(cg->currentStatementCode);
