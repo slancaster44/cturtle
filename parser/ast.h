@@ -48,6 +48,9 @@ struct Node {
 struct Block {
     struct Node** Statements;
     int numStatements;
+
+    /* Number of variables in this block's private scope */
+    int numPrimativeVarsInScope; //Used to pop stack frame
 };
 
 struct IntNode {

@@ -1110,8 +1110,10 @@ static inline void Insert_Stack_Imm_A(qword imm) {
 }
 
 static inline void Ensure_Stack_Size(qword imm) {
-    ensureStackAccomodations(imm);
-    SP += imm;
+    if (SP < imm) {
+        ensureStackAccomodations(imm - SP);
+        SP += imm;
+    }
 }
 
 static inline void Lda_Stack_Imm(qword imm) {

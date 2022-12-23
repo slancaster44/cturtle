@@ -12,8 +12,9 @@ struct Symtab* newSymtab() {
 }
 
 void pushNewStackFrame(struct Symtab* st) {
-    expand_array(struct Map*, st->StackFrames, st->numFrames, ++st->numFrames);
-    st->StackFrames[st->numFrames-1] = newMap();
+    expand_array(struct Map*, st->StackFrames, st->numFrames, st->numFrames+1);
+    st->StackFrames[st->numFrames] = newMap();
+    st->numFrames++;
 }
 
 void popStackFrame(struct Symtab* st) {
@@ -47,8 +48,6 @@ long long getStackOffSet(struct Symtab* st) {
 }
 
 void addVariable(struct Symtab* st, char* name, struct SymbolInfo* si) {
-    /* The location of this variable will be equal to the number of variables in this frame*/
-    si->StackLocation = getStackOffSet(st); 
     setPair(st->StackFrames[st->numFrames-1], name, (long long) si);
 }
 
@@ -71,4 +70,10 @@ struct SymbolInfo* getVariable(struct Symtab* st, char* name) {
     }
 
     return NULL;
+}
+
+int numVarsInCurFrame(struct Symtab* st) {
+    struct Map* thisFrame = st->StackFrames[st->numFrames-1];
+
+    return thisFrame->pairsUsed;
 }

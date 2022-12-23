@@ -295,6 +295,8 @@ struct Block* parseBlock(struct Parser* p, enum TokenType* terminators, int numT
     retVal->Statements = NULL;
     retVal->numStatements = 0;
 
+    pushNewStackFrame(p->PrimativeSymbols);
+
     while (!in_tokenType(p->curTok->Type, terminators, numTerminators)) {
         retVal->numStatements++;
         
@@ -308,6 +310,9 @@ struct Block* parseBlock(struct Parser* p, enum TokenType* terminators, int numT
         retVal->Statements[retVal->numStatements-1] = p->curNode;
         skipWhitespaceAndSetTok(p);
     }
+
+    retVal->numPrimativeVarsInScope = numVarsInCurFrame(p->PrimativeSymbols);
+    popStackFrame(p->PrimativeSymbols);
 
     return retVal;
 }
@@ -481,6 +486,7 @@ void parseIdent(struct Parser* p) {
         parser_panic(p, "Cannot assign non-value to variable\n");
     }
 
+    si->StackLocation = getStackOffSet(p->PrimativeSymbols); 
     result->as.Ident = new(struct IdentifierNode);
     result->as.Ident->StackLocation = si->StackLocation;
 

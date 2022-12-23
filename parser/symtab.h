@@ -19,6 +19,8 @@ struct Symtab* newSymtab();
 void pushNewStackFrame(struct Symtab* st);
 void popStackFrame(struct Symtab* st);
 void addVariable(struct Symtab* st, char* name, struct SymbolInfo* si);
+int numVarsInCurFrame(struct Symtab* st);
+long long getStackOffSet(struct Symtab* st);
 struct SymbolInfo* getVariable(struct Symtab* st, char* name);
 void deleteSymtab(struct Symtab* st);
 
