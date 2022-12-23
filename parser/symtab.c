@@ -26,7 +26,14 @@ void popStackFrame(struct Symtab* st) {
     }
 
     deleteMap(thisFrame);
-    shrink_array(struct Map*, st->StackFrames, st->numFrames, --st->numFrames);
+
+    if (st->numFrames == 1) {
+        free(st->StackFrames);
+        st->StackFrames = NULL;
+        st->numFrames--;
+    } else {
+        shrink_array(struct Map*, st->StackFrames, st->numFrames, --st->numFrames);
+    }
 }
 
 long long getStackOffSet(struct Symtab* st) {

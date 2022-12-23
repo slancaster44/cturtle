@@ -46,38 +46,12 @@ static inline void Lda_B(); //FI SI
 static inline void Ldb_A(); //FI SI
 
 /* Memory Management Instructions */
-static inline void Lda_SpNoff(qword negative_offset); //FI SI
-static inline void Lda_FoOff(qword offset); //FI SI
-static inline void Lda_FoNoff(qword negative_offset); //FI
 
-static inline void Ldb_SpNoff(qword negative_offset); //FI SI
-static inline void Ldb_FoOff(qword offset); //FI SI
-static inline void Ldb_FoNoff(qword negative_offset); //FI SI
 
-static inline void Ldm_SpNoff_A(qword offset); //FI SI
-static inline void Ldm_FoOff_A(qword offset); //FI SI
-static inline void Ldm_FoNoff_A(qword offset); //FI SI
-
-static inline void Ldm_SpNoff_B(qword offset); //FI SI
-static inline void Ldm_FoOff_B(qword offset); //FI SI
-static inline void Ldm_FoNoff_B(qword offset); //FI SI
-
-static inline void Ldfo(); //FI SI
-
-static inline void Sub_Sp_Imm(qword imm); //FI SI
-static inline void Sub_Sp_A(); //FI SI
-static inline void Sub_Sp_B(); //FI SI
-
-static inline void Add_Sp_Imm(qword imm); //FI SI
-static inline void Add_Sp_A(); //FI SI
-static inline void Add_Sp_B(); //FI SI
-
+/* Simple Stack Instructions */
 static inline void Push_Imm(qword imm); //FI SI
-static inline void Push_Fo(); //FI
 static inline void Push_A(); //FI SI
 static inline void Push_B(); //FI SI
-
-static inline void Pop_Fo();
 static inline void Pop_A(); //FI SI
 static inline void Pop_B(); //FI SI
 
@@ -170,6 +144,10 @@ static inline void Jpa_Z_Offset(qword off);
 
 static inline void Call_Offset(qword off); //FI SI
 static inline void Ret(); //FI SI
+
+static inline void Insert_Stack_Imm_A(qword imm);
+static inline void Ensure_Stack_Size(qword imm);
+static inline void Lda_Stack_Imm(qword imm);
 
 /* Misc */
 static inline void HandleBuiltin(byte imm); //FI SI

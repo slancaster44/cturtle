@@ -136,6 +136,18 @@ void Decompile(byte* code, int codelen) {
         case EXIT:
             printf("exit\n");
             break;
+        case ENSURE_STACK_SIZE:
+            printf("ess 0x%hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case INSERT_STACK_IMM_A:
+            printf("ldm stack[0x%hhX], a\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case LDA_STACK_IMM:
+            printf("lda stack[0x%hhX]\n", code[i+1]);
+            i += sizeof(qword);
+            break;
         default:
             printf("Cannot decompile opcode '%d'\n", code[i]);
             exit(1);

@@ -76,63 +76,6 @@ int executeInstruction() {
         case LDB_A:
             Ldb_A();
             break;
-        case LDFO:
-            Ldfo();
-            break;
-        case LDM_FOOFF_B:
-            Ldm_FoOff_B(getQwordImm());
-            break;
-        case LDM_FONOFF_B:
-            Ldm_FoNoff_B(getQwordImm());
-            break;
-        case LDA_FO_OFF:
-            Lda_FoOff(getQwordImm());
-            break;
-        case LDA_FO_NOFF:
-            Lda_FoNoff(getQwordImm());
-            break;
-        case LDM_FOOFF_A:
-            Ldm_FoOff_A(getQwordImm());
-            break;
-        case LDM_FONOFF_A:
-            Ldm_FoNoff_A(getQwordImm());
-            break;
-        case LDB_FO_OFF:
-            Ldb_FoOff(getQwordImm());
-            break;
-        case LDB_FO_NOFF:
-            Ldb_FoNoff(getQwordImm());
-            break;
-        case ADD_SP_IMM:
-            Add_Sp_Imm(getQwordImm());
-            break;
-        case SUB_SP_IMM:
-            Sub_Sp_Imm(getQwordImm());
-            break;
-        case ADD_SP_A:
-            Add_Sp_A();
-            break;
-        case SUB_SP_A:
-            Sub_Sp_A();
-            break;
-        case ADD_SP_B:
-            Sub_Sp_B();
-            break;
-        case SUB_SP_B:
-            Sub_Sp_B();
-            break;
-        case LDM_SPNOFF_A:
-            Ldm_SpNoff_A(getQwordImm());
-            break;
-        case LDM_SPNOFF_B:
-            Ldm_SpNoff_B(getQwordImm());
-            break;
-        case LDB_SP_NOFF:
-            Ldb_SpNoff(getQwordImm());
-            break;
-        case LDA_SP_NOFF:
-            Lda_SpNoff(getQwordImm());
-            break;
         case PUSH_IMM:
             Push_Imm(getQwordImm());
             break;
@@ -499,6 +442,15 @@ int executeInstruction() {
         case POP_BPB:
             Pop_Bpb();
             break;
+        case ENSURE_STACK_SIZE:
+            Ensure_Stack_Size(getQwordImm());
+            break;
+        case INSERT_STACK_IMM_A:
+            Insert_Stack_Imm_A(getQwordImm());
+            break;
+        case LDA_STACK_IMM:
+            Lda_Stack_Imm(getQwordImm());
+            break;
         case BUILTIN:
             HandleBuiltin(getByteImm());
             break;
@@ -599,49 +551,6 @@ static inline void Pop_B() {
     REG_B = SB[SP];
 }
 
-static inline void Add_Sp_Imm(qword imm) {
-    ensureStackAccomodations(imm);
-    SP += imm;
-}
-
-static inline void Add_Sp_A() {
-    ensureStackAccomodations(REG_A);
-    SP += REG_A;
-}
-
-static inline void Add_Sp_B() {
-    ensureStackAccomodations(REG_B);
-    SP += REG_B;
-}
-
-static inline void Sub_Sp_Imm(qword imm) {
-    SP -= imm;
-}
-
-static inline void Sub_Sp_A() {
-    SP -= REG_A;
-}
-
-static inline void Sub_Sp_B() {
-    SP -= REG_B;
-}
-
-static inline void Ldm_SpNoff_A(qword offset) {
-    SB[SP - offset] = REG_A;
-}
-
-static inline void Ldm_SpNoff_B(qword offset) {
-    SB[SP - offset] = REG_B;
-}
-
-static inline void Lda_SpNoff(qword offset) {
-    REG_A = SB[SP - offset];
-}
-
-static inline void Ldb_SpNoff(qword offset) {
-    REG_B = SB[SP - offset];
-}
-
 static inline void Lda_Imm(qword imm) {
     REG_A = imm;
 }
@@ -656,48 +565,6 @@ static inline void Lda_B() {
 
 static inline void Ldb_A() {
     REG_B = REG_A;
-}
-
-static inline void Ldfo() {
-    FO = SP;
-}
-
-static inline void Push_Fo() {
-    ensureStackAccomodations(1);
-    SB[SP] = FO;
-    SP += 1;
-}
-
-static inline void Lda_FoOff(qword offset) {
-    REG_A = SB[FO + offset];
-}
-
-static inline void Lda_FoNoff(qword negative_offset) {
-    REG_A = SB[FO - negative_offset];;
-}
-
-static inline void Ldb_FoOff(qword offset) {
-    REG_B = SB[FO + offset];;
-}
-
-static inline void Ldb_FoNoff(qword negative_offset) {
-    REG_B = SB[FO - negative_offset];
-}
-
-static inline void Ldm_FoOff_B(qword offset) {
-   SB[FO + offset] = REG_B;
-}
-
-static inline void Ldm_FoOff_A(qword offset) {
-   SB[FO + offset] = REG_A;
-}
-
-static inline void Ldm_FoNoff_B(qword offset) {
-   SB[FO - offset] = REG_B;
-}
-
-static inline void Ldm_FoNoff_A(qword offset) {
-   SB[FO - offset] = REG_A;
 }
 
 static inline void Add_A_B() {
@@ -1236,6 +1103,19 @@ static inline void Push_Bpb() {
 static inline void Pop_Bpa() {
     BSP --;
     BPA = BufferStack[BSP];
+}
+
+static inline void Insert_Stack_Imm_A(qword imm) {
+    SB[imm] = REG_A;
+}
+
+static inline void Ensure_Stack_Size(qword imm) {
+    ensureStackAccomodations(imm);
+    SP += imm;
+}
+
+static inline void Lda_Stack_Imm(qword imm) {
+    REG_A = SB[imm];
 }
 
 static inline void HandleBuiltin(byte imm) {

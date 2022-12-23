@@ -46,3 +46,5 @@ All unimplemented operators
 
 Cleanup Types (qword, etc);
 Newline at file end bug
+
+Rework VM

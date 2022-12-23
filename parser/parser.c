@@ -477,6 +477,10 @@ void parseIdent(struct Parser* p) {
     }
 
     result->rt = si->Type;
+    if (si->Type == NULL_RT || si->Type == INVALID_RT) {
+        parser_panic(p, "Cannot assign non-value to variable\n");
+    }
+
     result->as.Ident = new(struct IdentifierNode);
     result->as.Ident->StackLocation = si->StackLocation;
 

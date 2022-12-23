@@ -12,6 +12,8 @@ byte* compileBool(struct CodeGenerator* cg, struct Node* boolExpr);
 byte* compileBinOp(struct CodeGenerator* cg, struct Node* infixExpr);
 byte* compileIfElse(struct CodeGenerator* cg, struct Node* ifelStmt);
 byte* compileWhile(struct CodeGenerator* cg, struct Node* whileStmt);
+byte* compileLet(struct CodeGenerator* cg, struct Node* letStmt);
+byte* compileIdent(struct CodeGenerator* cg, struct Node* identStmt);
 
 void intToByteArray(uint64_t value, byte* outputBuffer);
 
@@ -89,6 +91,12 @@ byte* compileExpr(struct CodeGenerator* cg, struct Node* expr) {
     case WHILE_NT:
         return compileWhile(cg, expr);
         break;
+    case LET_NT:
+        return compileLet(cg, expr);
+        break;
+    case IDENT_NT:
+        return compileIdent(cg, expr);
+        break;
     default:
         node_panic(expr, "Could not generate code for '%s'\n", expr->tok->Contents);
     }
@@ -165,6 +173,7 @@ byte* compileBinOp(struct CodeGenerator* cg, struct Node* infixExpr) {
         byte* rhs_code = compileExpr(cg, infixExpr->as.BinOp->RHS);
         expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + cg->codeSize);
         memcpy(output_code + compositeCodeSize, rhs_code, cg->codeSize);
+        free(rhs_code);
         compositeCodeSize += cg->codeSize;
 
         expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + 3);
@@ -203,6 +212,7 @@ byte* compileBlock(struct CodeGenerator* cg, struct Block* b) {
             memcpy(output_code+compositeCodeSize, curStmt, cg->codeSize);
             compositeCodeSize += cg->codeSize;
         }
+        free(curStmt);
     }
 
     cg->codeSize = compositeCodeSize;
@@ -245,6 +255,10 @@ byte* compileIfElse(struct CodeGenerator* cg, struct Node* ifelStmt) {
         memcpy(copyToAddr + conditionSize, jmpInstruction, 1 + sizeof(qword));
         memcpy(copyToAddr + conditionSize + 1 + sizeof(qword), blockCode, blockSize);
         memcpy(copyToAddr + conditionSize + ((1 + sizeof(qword)) * 2), jmpOutInstruction, 1 + sizeof(qword));
+        free(conditionCode);
+        free(blockCode);
+        free(jmpInstruction);
+        free(jmpOutInstruction);
 
         if (backpatches == NULL) {
             backpatches = new_array(int, ++numBackpatches);
@@ -263,6 +277,7 @@ byte* compileIfElse(struct CodeGenerator* cg, struct Node* ifelStmt) {
 
         expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + elseSize);
         memcpy(output_code + compositeCodeSize, elseCode, elseSize);
+        free(elseCode);
         compositeCodeSize += elseSize;
     }
 
@@ -302,6 +317,38 @@ byte* compileWhile(struct CodeGenerator* cg, struct Node* whileStmt) {
         memcpy(output_code + conditionSize + 1 + sizeof(qword), blockCode, blockSize);
     }
 
+    free(blockCode);
+    free(conditionCode);
+    free(jmpInstruction);
+
     cg->codeSize = conditionSize + blockSize + 1 + sizeof(qword);
+    return output_code;
+}
+
+byte* compileLet(struct CodeGenerator* cg, struct Node* letStmt) {
+    byte* output_code = compileExpr(cg, letStmt->as.Let->Value);
+    int codeSize = cg->codeSize;
+
+    expand_array(byte, output_code, codeSize, codeSize + 1 + sizeof(qword));
+    output_code[codeSize++] = ENSURE_STACK_SIZE;
+    copyIntToByteArray((uint64_t) letStmt->as.Let->StackLocation, output_code + codeSize);
+    codeSize += sizeof(qword);
+
+    expand_array(byte, output_code, codeSize, codeSize + 1 + sizeof(qword));
+    output_code[codeSize++] = INSERT_STACK_IMM_A;
+    copyIntToByteArray((uint64_t) letStmt->as.Let->StackLocation, output_code + codeSize);
+    codeSize += sizeof(qword);
+
+    cg->codeSize = codeSize;
+    return output_code;
+}
+
+byte* compileIdent(struct CodeGenerator* cg, struct Node* identStmt) {
+    byte* output_code = new_array(byte, 1 + sizeof(qword));
+
+    output_code[0] = LDA_STACK_IMM;
+    copyIntToByteArray((uint64_t) identStmt->as.Ident->StackLocation, output_code + 1);
+
+    cg->codeSize = 1 + sizeof(qword);
     return output_code;
 }

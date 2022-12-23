@@ -14,40 +14,17 @@ enum Opcode {
     LDA_B,          /* A <- B */
     LDB_A,          /* B <- A */
 
-    LDA_SP_NOFF,     /* A <- (SP - Offset64) */
-    LDA_FO_OFF,      /* A <- (SB + FO + Offset64) */
-    LDA_FO_NOFF,     /* A <- (SB + FO - Offset64) */
-
-    LDB_SP_NOFF,     /* B <- (SP - Offset64) */
-    LDB_FO_OFF,      /* B <- (SB + FO + Offset64) */
-    LDB_FO_NOFF,     /* B <- (SB + FO - Offset64) */
-
-    LDM_SPNOFF_A,   /* (SP - Offset64) <- A */
-    LDM_FOOFF_A,    /* (SP + FO + Offset64) <- A */
-    LDM_FONOFF_A,   /* (SP - FO + Offset64) <- A */
-
-    LDM_SPNOFF_B,   /* (SP - Offset64) <- B */
-    LDM_FOOFF_B,    /* (SP + FO + Offset64) <- B */
-    LDM_FONOFF_B,   /* (SP - FO + Offset64) <- B */
-
-    LDFO,            /* FO <- SP - SB */
-
-    SUB_SP_IMM,      /* SP <- SP - Immediate64 */
-    SUB_SP_B,        /* SP <- SP - B */
-    SUB_SP_A,        /* SP <- SP - A */
-
-    ADD_SP_IMM,     /* SP <- SP + Immediate64 */
-    ADD_SP_B,       /* SP <- SP + B */
-    ADD_SP_A,       /* SP <- SP + A */
+    ENSURE_STACK_SIZE, /* Expand stack to be that size */
+    SHRINK_STACK_SIZE, /* Shrink stack down to that size */
+    INSERT_STACK_IMM_A, /* Stack[IMM] = A */
+    LDA_STACK_IMM, /* A = Stack[IMM] */
     
-    PUSH_FO,         /* (SP) <- FO; SP++ */
     PUSH_IMM,        /* (SP) <- Immediate64; SP++ */
     PUSH_A,          /* (SP) <- A; SP++  */
     PUSH_B,          /* (SP) <- B; SP++  */
     POP_A,           /* SP--; A <- (SP)  */
     POP_B,           /* SP--; B <- (SP)  */
-    POP_FO,          /* SP--; FO <- (SP) */
-    
+       
     AND_A_B,        /* A <- A & B */
     AND_B_A,        /* B <- A & B */
     AND_A_IMM,      /* A <- A & Immediate64 */
