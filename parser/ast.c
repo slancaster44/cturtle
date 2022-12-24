@@ -65,7 +65,8 @@ void printNodeHelper(struct Node* n, char* tab, char ext) {
 void printBlock(struct Block* b, char* tab, char ext) {
     char* completeTab = new_array(char, strlen(tab) + 2);
     sprintf(completeTab, "%s%c", tab, ext);
-    printf("%sBlock:\n", completeTab);
+    printf("%sBlock: ", completeTab);
+    printf("Scope size '%d'\n", b->numPrimativeVarsInScope);
     for (int i = 0; i < b->numStatements; i++) {
         printNodeHelper(b->Statements[i], completeTab, '\t');
     }

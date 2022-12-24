@@ -1,5 +1,6 @@
 CC := gcc
-CCFLAGS := -g -lm -Icommon #-lefence #-O3
+CCFLAGS := -g #-O3
+LINK := -lm  -Icommon -lefence 
 
 VM_SRC := vm/vm.c
 VM_HDR := vm/instructions.h common/mem_mac.h vm/vm.h
@@ -113,7 +114,7 @@ MAIN_INC := -Icodegen -Iparser -Ilexer -Ihash -Icommon -Ivm -Itdb -Itbin
 MAIN_TARGET := cturtle
 
 default:
-	$(CC) $(CCFLAGS) $(MAIN_INC) $(MAIN_HDR) $(MAIN_SRC)
+	$(CC) $(CCFLAGS) $(MAIN_INC) $(MAIN_HDR) $(MAIN_SRC) $(LINK)
 	@mv a.out $(MAIN_TARGET)
 	@rm -rf $(find . -name "*.gch" 2>/dev/null) $(find . -name "*.o" 2>/dev/null) $(find . -name "*.out" 2>/dev/null)
 

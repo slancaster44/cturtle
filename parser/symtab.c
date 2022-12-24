@@ -12,7 +12,7 @@ struct Symtab* newSymtab() {
 }
 
 void pushNewStackFrame(struct Symtab* st) {
-    expand_array(struct Map*, st->StackFrames, st->numFrames, st->numFrames+1);
+    expand_array(struct Map*, st->StackFrames, st->numFrames, (st->numFrames+1));
     st->StackFrames[st->numFrames] = newMap();
     st->numFrames++;
 }
@@ -33,7 +33,8 @@ void popStackFrame(struct Symtab* st) {
         st->StackFrames = NULL;
         st->numFrames--;
     } else {
-        shrink_array(struct Map*, st->StackFrames, st->numFrames, --st->numFrames);
+        shrink_array(struct Map*, st->StackFrames, st->numFrames, (st->numFrames-1));
+        st->numFrames--;
     }
 }
 
@@ -74,6 +75,5 @@ struct SymbolInfo* getVariable(struct Symtab* st, char* name) {
 
 int numVarsInCurFrame(struct Symtab* st) {
     struct Map* thisFrame = st->StackFrames[st->numFrames-1];
-
     return thisFrame->pairsUsed;
 }

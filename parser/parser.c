@@ -299,11 +299,11 @@ struct Block* parseBlock(struct Parser* p, enum TokenType* terminators, int numT
 
     while (!in_tokenType(p->curTok->Type, terminators, numTerminators)) {
         retVal->numStatements++;
-        
+
         if (retVal->Statements == NULL) {
             retVal->Statements = new_array(struct Node*, retVal->numStatements);
         } else {
-            expand_array(struct Node*, retVal->Statements, retVal->numStatements, retVal->numStatements+1);
+            expand_array(struct Node*, retVal->Statements, retVal->numStatements-1, retVal->numStatements);
         }
 
         prattParse(p, 0);
@@ -463,8 +463,8 @@ void parseLet(struct Parser* p) {
     result->as.Let->Value = p->curNode;
     struct SymbolInfo* si = new(struct SymbolInfo);
     si->Type = p->curNode->rt;
+    si->StackLocation = getStackOffSet(p->PrimativeSymbols); 
     addVariable(p->PrimativeSymbols, result->as.Let->Identifier, si);
-    /*Stack location inserted by 'addVariable' function */
     result->as.Let->StackLocation = si->StackLocation;
 
     p->curNode = result;
@@ -486,10 +486,9 @@ void parseIdent(struct Parser* p) {
         parser_panic(p, "Cannot assign non-value to variable\n");
     }
 
-    si->StackLocation = getStackOffSet(p->PrimativeSymbols); 
     result->as.Ident = new(struct IdentifierNode);
     result->as.Ident->StackLocation = si->StackLocation;
-
+    
     result->as.Ident->Identifier = result->tok->Contents;
     setCurTok(p);
 

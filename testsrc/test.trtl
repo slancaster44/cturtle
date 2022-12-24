@@ -3,6 +3,8 @@ let b = 11
 
 if true:
     a
+    let c = 13
+    c + 4
 else
     b
 end

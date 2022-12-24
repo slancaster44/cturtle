@@ -215,75 +215,99 @@ byte* compileBlock(struct CodeGenerator* cg, struct Block* b) {
         free(curStmt);
     }
 
+    if (b->numPrimativeVarsInScope != 0) {
+        expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + 1 + sizeof(qword));
+        output_code[compositeCodeSize] = SHRINK_STACK_SIZE;
+        copyIntToByteArray((uint64_t) b->numPrimativeVarsInScope, output_code + 1 + compositeCodeSize);
+        compositeCodeSize += 1 + sizeof(qword);
+    }
+
     cg->codeSize = compositeCodeSize;
     return output_code;
 }
 
+#define SIZE_OF_JMP_INS 9
 byte* compileIfElse(struct CodeGenerator* cg, struct Node* ifelStmt) {
     int compositeCodeSize = 0;
     byte* output_code = NULL;
 
     int numBackpatches = 0;
-    int* backpatches = NULL;
+    qword* backpatches = NULL;
 
-    for (int i = 0; i < ifelStmt->as.IfEl->numBlocks; i++) {
+    /* Code Layout:
+     * <condition code>
+     * jpa z, <next condition>
+     * <block code>
+     * jp <end of all blocks>
+     * ...
+     */
+    for (int i = 0; i < ifelStmt->as.IfEl->numBlocks; i ++) {
         byte* conditionCode = compileExpr(cg, ifelStmt->as.IfEl->Conditions[i]);
-        int conditionSize = cg->codeSize;
+        int conditionCodeSize = cg->codeSize;
+
+        byte jpToNextCondition[SIZE_OF_JMP_INS];
+        jpToNextCondition[0] = JPA_Z_OFF;
 
         byte* blockCode = compileBlock(cg, ifelStmt->as.IfEl->Blocks[i]);
         int blockSize = cg->codeSize;
 
-        int thisBranchSize = blockSize + conditionSize + ((1 + sizeof(qword)) * 2);
+        byte jpToEndOfBlocks[SIZE_OF_JMP_INS];
+        jpToEndOfBlocks[0] = JP_OFF;
 
-        byte* jmpInstruction = new_array(byte, 1 + sizeof(qword));
-        jmpInstruction[0] = JPA_Z_OFF;
-        copyIntToByteArray((uint64_t) cg->curAddress + compositeCodeSize + thisBranchSize, jmpInstruction + 1);
-    
-        byte* jmpOutInstruction = new_array(byte, 1 + sizeof(qword));
-        jmpOutInstruction[0] = JP_OFF;
+        int sizeOfThisBranch = conditionCodeSize + blockSize + (2*SIZE_OF_JMP_INS);
+        qword endingAddressOfThisBlock = cg->curAddress + sizeOfThisBranch;
 
-        byte* copyToAddr;
-        if (output_code == NULL) {
-            output_code = new_array(byte, thisBranchSize);
-            copyToAddr = output_code;
-        } else {
-            expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + thisBranchSize);
-            copyToAddr = output_code + compositeCodeSize;
-        }
+        /*Insert address to jpa z, <next condition> instruction*/
+        copyIntToByteArray(endingAddressOfThisBlock, jpToNextCondition + 1);
 
-        memcpy(copyToAddr, conditionCode, conditionSize);
-        memcpy(copyToAddr + conditionSize, jmpInstruction, 1 + sizeof(qword));
-        memcpy(copyToAddr + conditionSize + 1 + sizeof(qword), blockCode, blockSize);
-        memcpy(copyToAddr + conditionSize + ((1 + sizeof(qword)) * 2), jmpOutInstruction, 1 + sizeof(qword));
-        free(conditionCode);
-        free(blockCode);
-        free(jmpInstruction);
-        free(jmpOutInstruction);
-
+        /* Make note of location to back pattch <end of all blocks> address
+         * when we know it
+         */
+        numBackpatches++;
         if (backpatches == NULL) {
-            backpatches = new_array(int, ++numBackpatches);
-            backpatches[numBackpatches-1] = compositeCodeSize + conditionSize + blockSize + (1+sizeof(qword)) + 1;
+            backpatches = new_array(qword, numBackpatches);
         } else {
-            expand_array(int, backpatches, numBackpatches, ++numBackpatches);
-            backpatches[numBackpatches-1] = compositeCodeSize + conditionSize + blockSize + (1+sizeof(qword)) + 1;
+            expand_array(qword, backpatches, numBackpatches-1, numBackpatches);
         }
+        backpatches[i] = compositeCodeSize + sizeOfThisBranch - sizeof(qword);
 
-        compositeCodeSize += thisBranchSize;
+        //Insert code into output
+        if (output_code == NULL) {
+            output_code = new_array(byte, sizeOfThisBranch);
+        } else {
+            expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + sizeOfThisBranch);
+        }
+        
+        byte* copyToAddr = output_code;
+        
+        memcpy(copyToAddr, conditionCode, conditionCodeSize);
+        copyToAddr += conditionCodeSize;
+        memcpy(copyToAddr, jpToNextCondition, SIZE_OF_JMP_INS);
+        copyToAddr += SIZE_OF_JMP_INS;
+        memcpy(copyToAddr, blockCode, blockSize);
+        copyToAddr += blockSize;
+        memcpy(copyToAddr, jpToEndOfBlocks, SIZE_OF_JMP_INS);
+
+        compositeCodeSize += sizeOfThisBranch;
+
+        /* Cleanup */
+        free(blockCode);
+        free(conditionCode);
     }
 
     if (ifelStmt->as.IfEl->ElseBlock != NULL) {
-        byte* elseCode = compileBlock(cg, ifelStmt->as.IfEl->ElseBlock);
-        int elseSize = cg->codeSize;
+        byte* elseBlock = compileBlock(cg, ifelStmt->as.IfEl->ElseBlock);
+        int elseBlockSize = cg->codeSize;
 
-        expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + elseSize);
-        memcpy(output_code + compositeCodeSize, elseCode, elseSize);
-        free(elseCode);
-        compositeCodeSize += elseSize;
+        expand_array(byte, output_code, compositeCodeSize, compositeCodeSize+elseBlockSize);
+        memcpy(output_code+compositeCodeSize, elseBlock, elseBlockSize);
+
+        compositeCodeSize += elseBlockSize;
+        free(elseBlock);
     }
 
-
     for (int i = 0; i < numBackpatches; i++) {
-        copyIntToByteArray(cg->curAddress + compositeCodeSize, output_code + backpatches[i]);
+        output_code[backpatches[i]] = cg->curAddress + compositeCodeSize;
     }
 
     cg->codeSize = compositeCodeSize;
@@ -331,7 +355,7 @@ byte* compileLet(struct CodeGenerator* cg, struct Node* letStmt) {
 
     expand_array(byte, output_code, codeSize, codeSize + 1 + sizeof(qword));
     output_code[codeSize++] = ENSURE_STACK_SIZE;
-    copyIntToByteArray((uint64_t) letStmt->as.Let->StackLocation, output_code + codeSize);
+    copyIntToByteArray((uint64_t) letStmt->as.Let->StackLocation+1, output_code + codeSize);
     codeSize += sizeof(qword);
 
     expand_array(byte, output_code, codeSize, codeSize + 1 + sizeof(qword));

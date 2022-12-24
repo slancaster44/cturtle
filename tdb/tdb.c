@@ -148,6 +148,10 @@ void Decompile(byte* code, int codelen) {
             printf("lda stack[0x%hhX]\n", code[i+1]);
             i += sizeof(qword);
             break;
+        case SHRINK_STACK_SIZE:
+            printf("sss %hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
         default:
             printf("Cannot decompile opcode '%d'\n", code[i]);
             exit(1);

@@ -65,7 +65,7 @@ struct TurtleBinary* readTurtleFile(char* filename) {
         magic[i] = getc(fp);
     }
     
-    if (strcmp(magic, MAGIC_NUMBER)) {
+    if (!strcmp(magic, MAGIC_NUMBER)) {
         printf("Invalid Magic Number\n");
         exit(1);
     }
