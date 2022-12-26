@@ -14,6 +14,7 @@ enum NodeType {
     BINOP_NT,
     WHILE_NT,
     LET_NT,
+    ASSIGN_NT,
     IDENT_NT,
 };
 
@@ -38,6 +39,7 @@ struct Node {
         struct WhileNode* While;
         struct LetNode* Let;
         struct IdentifierNode* Ident;
+        struct AssignNode* Assign;
     } as;
 
     struct Token* tok;
@@ -96,6 +98,11 @@ struct LetNode {
 
 struct IdentifierNode {
     char* Identifier;
+    long long StackLocation;
+};
+
+struct AssignNode {
+    struct Node* Value;
     long long StackLocation;
 };
 

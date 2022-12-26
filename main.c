@@ -22,9 +22,6 @@ void debug(char* filename);
 void compile(char* filename);
 
 int main(int argc, char* argv[]) {
-    compile("testsrc/test.trtl");
-    debug("./output.tbin");
-    return 0;
     if (argc < 2) {
         printf("No Arguments\n");
         printHelp();
@@ -63,29 +60,11 @@ void printHelp() {
 }
 
 void compile(char* filename) {
-    struct CodeGenerator* cg = newCodeGenerator(filename);
-
-    /*Compile program statement by statement*/
-    int outputCodeSize = 0;
-    uint8_t* outputCode = new_array(uint8_t, 1);
-    
-    while (cg->currentStatementCode == NULL || cg->parser->curTok->Type != EOF_TT) {
-        compileCurrentStatement(cg);
-
-        expand_array(uint8_t, outputCode, outputCodeSize, outputCodeSize + cg->codeSize);
-        memcpy(outputCode + outputCodeSize, cg->currentStatementCode, cg->codeSize);
-        outputCodeSize += cg->codeSize;
-    }
-    deleteCodeGenerator(cg);
-    cg = NULL;
-
-    /* Append Exit Instruction */
-    expand_array(uint8_t, outputCode, outputCodeSize, outputCodeSize + 1);
-    outputCode[outputCodeSize++] = EXIT;
+    struct CodeObj code = Compile(filename);
 
     /* Write out program */
     struct TurtleBinary* outputBin = newBinary();
-    writeCode(outputBin, outputCode, outputCodeSize);
+    writeCode(outputBin, code.code, code.codelen);
     writeTurtleFile(outputBin, "output.tbin");
     deleteTurtleBinary(outputBin);
 }
