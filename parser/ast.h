@@ -18,14 +18,27 @@ enum NodeType {
 };
 
 /* Type the node returns when evaluated */
-enum ReturnType {
-    INVALID_RT, /* Returned when a value is invalid */
-    NULL_RT, /* Statements will use this as their return type */
-    INT_RT,
-    BOOL_RT,
-    FLT_RT,
-    CHR_RT,
+enum BaseType {
+    INVALID_BT, /* Returned when a value is invalid */
+    NULL_BT, /* Statements will use this as their return type */
+    INT_BT,
+    BOOL_BT,
+    FLT_BT,
+    CHR_BT,
+    LIST_BT,
 };
+
+struct ValueType {
+    enum BaseType base_type;
+
+    union {
+        struct ValueType* ListEntryType;
+    } subtype_info;
+};
+
+struct ValueType* newType(enum BaseType bt);
+void deleteType(struct ValueType* vt);
+bool typesMatch(struct ValueType* v1, struct ValueType* v2);
 
 struct Node {
     union {
@@ -42,7 +55,7 @@ struct Node {
 
     struct Token* tok;
     enum NodeType nt;
-    enum ReturnType rt;
+    struct ValueType* vt;
 };
 
 struct Block {

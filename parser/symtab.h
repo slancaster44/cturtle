@@ -11,7 +11,7 @@ struct Symtab {
 
 
 struct SymbolInfo {
-    enum ReturnType Type;
+    struct ValueType* Type; /*TODO: Cleanup */
     long long StackLocation;
 };
 

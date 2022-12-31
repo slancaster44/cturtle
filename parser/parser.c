@@ -31,7 +31,7 @@ void parseChr(struct Parser* p);
 void parseBool(struct Parser* p);
 
 void parseBinOp(struct Parser* p);
-enum ReturnType CheckTypeBinOp(struct Parser* p, char* op, enum ReturnType lhs_type, enum ReturnType rhs_type);
+struct ValueType* CheckTypeBinOp(struct Parser* p, char* op, struct ValueType* lhs_type, struct ValueType* rhs_type);
 
 /********/
 
@@ -171,7 +171,7 @@ void parseInt(struct Parser* p) {
     p->curNode->as.Int = new(struct IntNode);
     p->curNode->as.Int->Value = atoi(p->curTok->Contents);
 
-    p->curNode->rt = INT_RT;
+    p->curNode->vt = newType(INT_BT);
     setCurTok(p);
 }
 
@@ -186,7 +186,7 @@ void parseBool(struct Parser* p) {
     p->curNode->as.Bool = new(struct BoolNode);
     p->curNode->as.Bool->Value = p->curTok->Type == TRUE_TT;
 
-    p->curNode->rt = BOOL_RT;
+    p->curNode->vt = newType(BOOL_BT);
     setCurTok(p);
 }
 
@@ -200,7 +200,7 @@ void parseFlt(struct Parser* p) {
     p->curNode->as.Flt = new(struct FltNode);
     p->curNode->as.Flt->Value = atof(p->curTok->Contents);
 
-    p->curNode->rt = FLT_RT;
+    p->curNode->vt = newType(FLT_BT);
     setCurTok(p);
 }
 
@@ -214,7 +214,7 @@ void parseChr(struct Parser* p) {
     p->curNode->as.Chr = new(struct ChrNode);
     p->curNode->as.Chr->Value = p->curTok->Contents[0];
 
-    p->curNode->rt = CHR_RT;
+    p->curNode->vt = newType(CHR_BT);
     setCurTok(p);
 }
 
@@ -270,7 +270,7 @@ void parseBinOp(struct Parser* p) {
     prattParse(p, prec);
 
     result->as.BinOp->RHS = p->curNode;
-    result->rt = CheckTypeBinOp(p, result->as.BinOp->Op, result->as.BinOp->LHS->rt, result->as.BinOp->RHS->rt);
+    result->vt = CheckTypeBinOp(p, result->as.BinOp->Op, result->as.BinOp->LHS->vt, result->as.BinOp->RHS->vt);
 
     p->curNode = result;
 }
@@ -322,7 +322,7 @@ void parseIfElse(struct Parser* p) {
     result->tok = new(struct Token)
     copyToken(result->tok, p->curTok);
     result->nt = IFEL_NT;
-    result->rt = NULL_RT;
+    result->vt = newType(NULL_BT);
 
     result->as.IfEl = new(struct IfElseNode);
 
@@ -378,7 +378,7 @@ void parseWhile(struct Parser* p) {
     result->tok = new(struct Token);
     copyToken(result->tok, p->curTok);
     result->nt = WHILE_NT;
-    result->rt = NULL_RT;
+    result->vt = newType(NULL_BT);
     result->as.While = new(struct WhileNode);
     result->as.While->isDoWhile = false;
 
@@ -387,7 +387,7 @@ void parseWhile(struct Parser* p) {
     prattParse(p, 0); 
     result->as.While->Condition = p->curNode; 
 
-    if (result->as.While->Condition->rt != BOOL_RT) {
+    if (result->as.While->Condition->vt->base_type != BOOL_BT) {
         parser_panic(p, "While loop condition must return boolean value\n");
     }
 
@@ -412,7 +412,7 @@ void parseDoWhile(struct Parser* p) {
     result->tok = new(struct Token);
     copyToken(result->tok, p->curTok);
     result->nt = WHILE_NT;
-    result->rt = NULL_RT;
+    result->vt = newType(NULL_BT);
     result->as.While = new(struct WhileNode);
     result->as.While->isDoWhile = true;
 
@@ -429,7 +429,7 @@ void parseDoWhile(struct Parser* p) {
     prattParse(p, 0);
     result->as.While->Condition = p->curNode;
 
-    if (result->as.While->Condition->rt != BOOL_RT) {
+    if (result->as.While->Condition->vt->base_type != BOOL_BT) {
         parser_panic(p, "While loop condition must return boolean value\n");
     }
 
@@ -441,7 +441,7 @@ void parseLet(struct Parser* p) {
     result->tok = new(struct Token);
     copyToken(result->tok, p->curTok);
     result->nt = LET_NT;
-    result->rt = NULL_RT;
+    result->vt = newType(NULL_BT);
     result->as.Let = new(struct LetNode);
 
     setCurTok(p); /* Step over 'let' token */
@@ -462,7 +462,7 @@ void parseLet(struct Parser* p) {
 
     result->as.Let->Value = p->curNode;
     struct SymbolInfo* si = new(struct SymbolInfo);
-    si->Type = p->curNode->rt;
+    si->Type = p->curNode->vt; /*TODO: Copy?*/
     si->StackLocation = getStackOffSet(p->PrimativeSymbols); 
     addVariable(p->PrimativeSymbols, result->as.Let->Identifier, si);
     result->as.Let->StackLocation = si->StackLocation;
@@ -481,8 +481,8 @@ void parseIdent(struct Parser* p) {
         parser_panic(p, "No such variable '%s'\n", p->curTok->Contents);
     }
 
-    result->rt = si->Type;
-    if (si->Type == NULL_RT || si->Type == INVALID_RT) {
+    result->vt = si->Type; /*TODO: Copy?*/
+    if (si->Type->base_type == NULL_BT || si->Type->base_type == INVALID_BT) {
         parser_panic(p, "Cannot assign non-value to variable\n");
     }
 
