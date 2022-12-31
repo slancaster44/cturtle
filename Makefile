@@ -95,12 +95,12 @@ prs_make_run: prs_make_test
 	$(PRS_TARGET)
 
 GEN_SRC := codegen/codegen.c  $(TDB_SRC) $(VM_SRC) $(PRS_SRC)
-GEN_HDR := codegen/symtab.h 
+GEN_HDR :=
 GEN_INC := -Ihash -Icommon -Ivm -Iparser -Ilexer -Itdb
 GEN_TARGET := codegen/test
 
 gen_make_test:
-	$(CC) $(CCFLAGS) $(GEN_INC) $(GEN_HDR) $(GEN_SRC) codegen/test.c
+	$(CC) $(CCFLAGS) $(GEN_INC) $(GEN_HDR) $(GEN_SRC) codegen/test.c $(LINK)
 	@mv a.out $(GEN_TARGET)
 	@rm -rf $(find .. -name "*.gch" 2>/dev/null) $(find .. -name "*.o" 2>/dev/null) $(find .. -name "*.out" 2>/dev/null)
 
