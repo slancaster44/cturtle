@@ -1,6 +1,6 @@
 CC := gcc
-CCFLAGS := -g -O3
-LINK := -lm  -Icommon #-lefence 
+CCFLAGS := -g #-O3
+LINK := -lm  -Icommon -lefence 
 
 VM_SRC := vm/vm.c
 VM_HDR := vm/instructions.h common/mem_mac.h vm/vm.h
@@ -95,12 +95,12 @@ prs_make_run: prs_make_test
 	$(PRS_TARGET)
 
 GEN_SRC := codegen/codegen.c  $(TDB_SRC) $(VM_SRC) $(PRS_SRC)
-GEN_HDR := codegen/codegen.h
+GEN_HDR := codegen/symtab.h 
 GEN_INC := -Ihash -Icommon -Ivm -Iparser -Ilexer -Itdb
 GEN_TARGET := codegen/test
 
 gen_make_test:
-	$(CC) $(CCFLAGS) $(GEN_INC) $(GEN_HDR) $(GEN_SRC) codegen/test.c $(LINK)
+	$(CC) $(CCFLAGS) $(GEN_INC) $(GEN_HDR) $(GEN_SRC) codegen/test.c
 	@mv a.out $(GEN_TARGET)
 	@rm -rf $(find .. -name "*.gch" 2>/dev/null) $(find .. -name "*.o" 2>/dev/null) $(find .. -name "*.out" 2>/dev/null)
 

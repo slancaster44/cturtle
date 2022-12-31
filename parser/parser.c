@@ -18,7 +18,6 @@ void prattParse(struct Parser* p, int precedence);
 
 void parsePrefix(struct Parser* p);
 bool parseInfix(struct Parser* p); //returns true on success
-void parseAssignment(struct Parser* p);
 
 void parseIfElse(struct Parser* p);
 void parseDoWhile(struct Parser* p);
@@ -52,7 +51,6 @@ struct Parser newParser(char* filename) {
     setPair(retVal.precMap, "-", 3);
     setPair(retVal.precMap, "*", 4);
     setPair(retVal.precMap, "/", 4);
-    setPair(retVal.precMap, "=", 5);
 
     retVal.curTok = NULL;
     retVal.curNode = NULL;
@@ -245,9 +243,6 @@ bool parseInfix(struct Parser* p) {
         return true;
     case BOOL_AND_TT:
         parseBinOp(p);
-        return true;
-    case EQ_TT:
-        parseAssignment(p);
         return true;
     default:
         return false;
@@ -497,34 +492,5 @@ void parseIdent(struct Parser* p) {
     result->as.Ident->Identifier = result->tok->Contents;
     setCurTok(p);
 
-    p->curNode = result;
-}
-
-void parseAssignment(struct Parser* p) {
-    struct Node* Ident = p->curNode;
-    if (Ident->nt != IDENT_NT) {
-        parser_panic(p, "Expected identifier before '='\n");
-    }
-
-    struct Node* result = new(struct Node);
-    result->tok = new(struct Token);
-    copyToken(result->tok, p->curTok);
-    result->nt = ASSIGN_NT;
-    result->rt = NULL_RT;
-
-
-    struct SymbolInfo* si = getVariable(p->PrimativeSymbols, Ident->as.Ident->Identifier);
-    if (si == NULL) {
-        parser_panic(p, "No such variable '%s'\n", p->curTok->Contents);
-    }
-
-    result->as.Assign = new(struct AssignNode);
-    result->as.Assign->StackLocation = si->StackLocation;
-
-    setCurTok(p); /* Move over '=' */
-    deleteNode(p->curNode);
-    prattParse(p, 0);
-
-    result->as.Assign->Value = p->curNode;
     p->curNode = result;
 }

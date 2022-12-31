@@ -8,10 +8,6 @@
 void debugPrint(byte* code, int codelen);
 
 void DebugRawByteCode(byte* code, int codelen) {
-    if (codelen == 0) {
-        return;
-    }
-    
     initVM(code, codelen);
 
     char command;
@@ -95,10 +91,6 @@ void Decompile(byte* code, int codelen) {
             break;
         case MUL_A_IMM:
             printf("mul a, 0x%hhX\n", code[i+1]);
-            i += sizeof(qword);
-            break;
-        case SUB_A_IMM:
-            printf("sub a, 0x%hhX\n", code[i+1]);
             i += sizeof(qword);
             break;
         case EQ_A_B:

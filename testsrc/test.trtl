@@ -1,5 +1,10 @@
+let a = 10
+let b = 11
 
-let a = 150000000000000000000000000000000000
-while a != 0:
-    a = a - 15
+if true:
+    a
+    let c = 13
+    c + 4
+else
+    b
 end

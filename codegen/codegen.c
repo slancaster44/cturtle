@@ -1,277 +1,378 @@
 #include "codegen.h"
-#include "hash.h"
-#include "parser.h"
-#include "mem_mac.h"
 #include "instructions.h"
-#include "panic.h"
+#include "mem_mac.h"
+#include "parser.h"
+#include "ast.h"
 
 #include <string.h>
 
-#define gen_panic(GEN, ...) {\
-    panic(GEN->parser.curTok->line, GEN->parser.curTok->column, GEN->parser.curTok->filename, __VA_ARGS__); \
-}
+byte* compileExpr(struct CodeGenerator* cg, struct Node* expr);
+byte* compileInt(struct CodeGenerator* cg, struct Node* intExpr);
+byte* compileBool(struct CodeGenerator* cg, struct Node* boolExpr);
+byte* compileBinOp(struct CodeGenerator* cg, struct Node* infixExpr);
+byte* compileIfElse(struct CodeGenerator* cg, struct Node* ifelStmt);
+byte* compileWhile(struct CodeGenerator* cg, struct Node* whileStmt);
+byte* compileLet(struct CodeGenerator* cg, struct Node* letStmt);
+byte* compileIdent(struct CodeGenerator* cg, struct Node* identStmt);
 
-void AppendCode(struct CodeGenerator* cg, byte* code, int codelen);
-void compileNode(struct CodeGenerator* cg, struct Node* n);
-void compileInt(struct CodeGenerator* cg, struct Node* IntNode);
-void compileBool(struct CodeGenerator* cg, struct Node* BoolNode);
-void compileBinOp(struct CodeGenerator* cg, struct Node* node);
-void compileIfElse(struct CodeGenerator* cg, struct Node* node);
-void compileWhile(struct CodeGenerator* cg, struct Node* n);
-void compileLet(struct CodeGenerator* cg, struct Node* n);
-void compileIdent(struct CodeGenerator* cg, struct Node* n);
-void compileAssign(struct CodeGenerator* cg, struct Node* n);
+void intToByteArray(uint64_t value, byte* outputBuffer);
 
-struct CodeObj Compile(char* filename) {
-    struct CodeGenerator cg;
-    cg.OutputCode = NULL;
-    cg.OutputCodeLen = 0;
-    cg.parser = newParser(filename);
+struct CodeGenerator* newCodeGenerator(char* filename) {
+    struct CodeGenerator* retVal = new(struct CodeGenerator);
 
-    cg.OpAImm = newMap();
-    setPair(cg.OpAImm, "+", ADD_A_IMM);
-    setPair(cg.OpAImm, "-", SUB_A_IMM);
-    setPair(cg.OpAImm, "*", MUL_A_IMM);
-    setPair(cg.OpAImm, "/", DIV_A_IMM);
-    setPair(cg.OpAImm, "==", EQ_A_IMM);
-    setPair(cg.OpAImm, "!=", NE_A_IMM);
-    setPair(cg.OpAImm, "||", OR_A_IMM);
-    setPair(cg.OpAImm, "&&", AND_A_IMM);
+    retVal->parser = new(struct Parser);
+    struct Parser tempParser = newParser(filename);
+    memcpy(retVal->parser, &tempParser, sizeof(struct Parser));
 
-    cg.OpAB = newMap();
-    setPair(cg.OpAB, "+", ADD_A_B);
-    setPair(cg.OpAB, "-", SUB_A_B);
-    setPair(cg.OpAB, "*", MUL_A_B);
-    setPair(cg.OpAB, "/", DIV_A_B);
-    setPair(cg.OpAB, "==", EQ_A_B);
-    setPair(cg.OpAB, "!=", NE_A_B);
-    setPair(cg.OpAB, "||", OR_A_B);
-    setPair(cg.OpAB, "&&", AND_A_B);
+    retVal->currentStatementCode = NULL;
 
-    do { /* TODO: What about empty files */
-        ParseStmt(&cg.parser);
-        compileNode(&cg, cg.parser.curNode);
-    } while (cg.parser.curTok->Type != EOF_TT);
+    retVal->curAddress = 0;
 
-    byte exitIns = EXIT;
-    AppendCode(&cg, &exitIns, 1);
+    retVal->OpImmMap = newMap();
+    setPair(retVal->OpImmMap, "+", ADD_A_IMM);
+    setPair(retVal->OpImmMap, "-", SUB_A_IMM);
+    setPair(retVal->OpImmMap, "*", MUL_A_IMM);
+    setPair(retVal->OpImmMap, "/", DIV_A_IMM);
+    setPair(retVal->OpImmMap, "==", EQ_A_IMM);
+    setPair(retVal->OpImmMap, "!=", NE_A_IMM);
+    setPair(retVal->OpImmMap, "||", OR_A_IMM);
+    setPair(retVal->OpImmMap, "&&", AND_A_IMM);
 
-    deleteMap(cg.OpAImm);
-    deleteMap(cg.OpAB);
-    deleteParser(cg.parser);
 
-    struct CodeObj retVal;
-    retVal.code = cg.OutputCode;
-    retVal.codelen = cg.OutputCodeLen;
+    retVal->OpABMap = newMap();
+    setPair(retVal->OpABMap, "+", ADD_A_B);
+    setPair(retVal->OpABMap, "-", SUB_A_B);
+    setPair(retVal->OpABMap, "*", MUL_A_B);
+    setPair(retVal->OpABMap, "/", DIV_A_B);
+    setPair(retVal->OpABMap, "==", EQ_A_B);
+    setPair(retVal->OpABMap, "!=", NE_A_B);
+    setPair(retVal->OpABMap, "||", OR_A_B);
+    setPair(retVal->OpABMap, "&&", AND_A_B);
 
     return retVal;
 }
 
-void AppendCode(struct CodeGenerator* cg, byte* code, int codelen)  {
+void deleteCodeGenerator(struct CodeGenerator* cg) {
+    deleteParser(*cg->parser);
+    free(cg->parser);
 
-    if (cg->OutputCode == NULL) {
-        cg->OutputCode = new_array(byte, codelen);
-        memcpy(cg->OutputCode, code, codelen);
-    } else {
-        expand_array(byte, cg->OutputCode, cg->OutputCodeLen, cg->OutputCodeLen + codelen);
-        memcpy(cg->OutputCode + cg->OutputCodeLen, code, codelen);
-    }
+    if (cg->currentStatementCode != NULL)
+        free(cg->currentStatementCode);
 
-    cg->OutputCodeLen += codelen;
+    deleteMap(cg->OpImmMap);
+    deleteMap(cg->OpABMap);
 }
 
-void compileNode(struct CodeGenerator* cg, struct Node* n) {
-    switch (n->nt) {
+void compileCurrentStatement(struct CodeGenerator* cg) {
+    ParseStmt(cg->parser);
+    struct Node* statement = cg->parser->curNode;
+
+    free(cg->currentStatementCode);
+    cg->codeSize = 0; /* TODO: Is this necessary? */
+
+    cg->currentStatementCode = compileExpr(cg, statement);
+    cg->curAddress += cg->codeSize;
+}
+
+byte* compileExpr(struct CodeGenerator* cg, struct Node* expr) {
+    switch (expr->nt) {
     case INT_NT:
-        compileInt(cg, n);
+        return compileInt(cg, expr);
         break;
     case BOOL_NT:
-        compileBool(cg, n);
+        return compileBool(cg, expr);
         break;
     case BINOP_NT:
-        compileBinOp(cg, n);
+        return compileBinOp(cg, expr);
         break;
     case IFEL_NT:
-        compileIfElse(cg, n);
+        return compileIfElse(cg, expr);
         break;
     case WHILE_NT:
-        compileWhile(cg, n);
+        return compileWhile(cg, expr);
         break;
     case LET_NT:
-        compileLet(cg, n);
+        return compileLet(cg, expr);
         break;
     case IDENT_NT:
-        compileIdent(cg, n);
-        break;
-    case ASSIGN_NT:
-        compileAssign(cg, n);
+        return compileIdent(cg, expr);
         break;
     default:
-        gen_panic(cg, "Could not generate code for '%s'\n", cg->parser.curNode->tok->Contents);
+        node_panic(expr, "Could not generate code for '%s'\n", expr->tok->Contents);
     }
 }
 
-void putIntInByteArray(qword val, byte* buffer) {
-    memcpy(buffer, &val, sizeof(qword));
+void copyIntToByteArray(uint64_t value, byte* outputBuffer) {
+    memcpy(outputBuffer, &value, sizeof(uint64_t));
 }
 
-void compileInt(struct CodeGenerator* cg, struct Node* IntNode) {
-    byte code[9];
-    code[0] = LDA_IMM;
-    putIntInByteArray(IntNode->as.Int->Value, code+1);
-    AppendCode(cg, code, 9);
+#define SIZEOF_LDA_IMM 9
+byte* compileInt(struct CodeGenerator* cg, struct Node* intExpr) {
+    int val = intExpr->as.Int->Value;
+    byte* instructions = new_array(byte, SIZEOF_LDA_IMM);
+    
+    instructions[0] = LDA_IMM;
+    copyIntToByteArray((uint64_t) val, instructions + 1);
+
+    cg->codeSize = SIZEOF_LDA_IMM;
+
+    return instructions;
 }
 
-void compileBool(struct CodeGenerator* cg, struct Node* BoolNode) {
-    byte code[9];
-    code[0] = LDA_IMM;
-    putIntInByteArray(BoolNode->as.Bool->Value, code+1);
-    AppendCode(cg, code, 9);
+byte* compileBool(struct CodeGenerator* cg, struct Node* boolExpr) {
+    uint64_t val = (uint64_t) boolExpr->as.Bool->Value;
+    byte* instructions = new_array(byte, SIZEOF_LDA_IMM);
+
+    instructions[0] = LDA_IMM;
+    copyIntToByteArray(val, instructions + 1);
+
+    cg->codeSize = SIZEOF_LDA_IMM;
+
+    return instructions;
 }
 
-void compileBinOp(struct CodeGenerator* cg, struct Node* node) {
-    compileNode(cg, node->as.BinOp->LHS);
+byte* compileBinOp(struct CodeGenerator* cg, struct Node* infixExpr) {
 
-    int opcode;
-    switch (node->as.BinOp->RHS->nt) {
+    int compositeCodeSize = 0; //Total size of all the code generated by this expression
+
+    //Compile LHS
+    byte* output_code = compileExpr(cg, infixExpr->as.BinOp->LHS);
+    compositeCodeSize += cg->codeSize;
+
+    /* TODO: Implement type checking */
+
+    byte opcode;
+    int val;
+    switch (infixExpr->as.BinOp->RHS->nt) {
     case INT_NT:
-        opcode = lookup(cg->OpAImm, node->as.BinOp->Op);
-        byte int_code[9];
-        int_code[0] = opcode;
-        putIntInByteArray(node->as.BinOp->RHS->as.Int->Value, int_code+1);
-        AppendCode(cg, int_code, 9);
+        opcode = lookup(cg->OpImmMap, infixExpr->as.BinOp->Op);
+        expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + 1 + sizeof(uint64_t));
+        output_code[compositeCodeSize++] = opcode;
+        
+        val = infixExpr->as.BinOp->RHS->as.Int->Value;
+        copyIntToByteArray((uint64_t) val, output_code + compositeCodeSize);
+        compositeCodeSize += sizeof(uint64_t);
+
         break;
     case BOOL_NT:
-        opcode = lookup(cg->OpAImm, node->as.BinOp->Op);
-        byte bool_code[9];
-        bool_code[0] = opcode;
-        putIntInByteArray(node->as.BinOp->RHS->as.Bool->Value, bool_code+1);
-        AppendCode(cg, bool_code, 9);
+        opcode = lookup(cg->OpImmMap, infixExpr->as.BinOp->Op);
+        expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + 1 + sizeof(uint64_t));
+        output_code[compositeCodeSize++] = opcode;
+        
+        val = infixExpr->as.BinOp->RHS->as.Bool->Value;
+        copyIntToByteArray((uint64_t) val, output_code + compositeCodeSize);
+        compositeCodeSize += sizeof(uint64_t);
+
         break;
     case BINOP_NT:
-        opcode = lookup(cg->OpAB, node->as.BinOp->Op);
 
-        byte push_code = PUSH_A;
-        AppendCode(cg, &push_code, 1);
+        opcode = lookup(cg->OpABMap, infixExpr->as.BinOp->Op);
+        expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + 1);
+        output_code[compositeCodeSize++] = PUSH_A;
 
-        compileNode(cg, node->as.BinOp->RHS);
+        byte* rhs_code = compileExpr(cg, infixExpr->as.BinOp->RHS);
+        expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + cg->codeSize);
+        memcpy(output_code + compositeCodeSize, rhs_code, cg->codeSize);
+        free(rhs_code);
+        compositeCodeSize += cg->codeSize;
 
-        byte binop_code[3] = {LDB_A, POP_A, opcode};
-        AppendCode(cg, binop_code, 3);
+        expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + 3);
 
+        output_code[compositeCodeSize++] = LDB_A;
+        output_code[compositeCodeSize++] = POP_A;
+        output_code[compositeCodeSize++] = opcode;
         break;
     default:
-        gen_panic(cg, "Could not generate code for RHS\n");
+        node_panic(infixExpr, "Invalid RHS\n");
+        break;
     }
 
-    if (opcode == -1) {
-        gen_panic(cg, "Could not find opcode\n");
-    }
+    if (opcode == 255) 
+        node_panic(infixExpr, "Could not compile for operator '%s'\n", infixExpr->as.BinOp->Op);
+
+
+    cg->codeSize = compositeCodeSize; 
+
+    return output_code;
 }
 
-void compileBlock(struct CodeGenerator* cg, struct Block* b) {
-    for (int i = 0; i < b->numStatements; i ++) {
-        compileNode(cg, b->Statements[i]);
+byte* compileBlock(struct CodeGenerator* cg, struct Block* b) {
+    int compositeCodeSize = 0;
+    byte* output_code = NULL;
+
+    for (int i = 0; i < b->numStatements; i++) {
+        byte* curStmt = compileExpr(cg, b->Statements[i]);
+
+        if (output_code == NULL) {
+            compositeCodeSize += cg->codeSize;
+            output_code = new_array(byte, compositeCodeSize);
+            memcpy(output_code, curStmt, compositeCodeSize);
+        } else {
+            expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + cg->codeSize);
+            memcpy(output_code+compositeCodeSize, curStmt, cg->codeSize);
+            compositeCodeSize += cg->codeSize;
+        }
+        free(curStmt);
     }
 
     if (b->numPrimativeVarsInScope != 0) {
-        byte frame_code[9];
-        frame_code[0] = SHRINK_STACK_SIZE;
-        putIntInByteArray(b->numPrimativeVarsInScope, frame_code+1);
-        AppendCode(cg, frame_code, 9);
+        expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + 1 + sizeof(qword));
+        output_code[compositeCodeSize] = SHRINK_STACK_SIZE;
+        copyIntToByteArray((uint64_t) b->numPrimativeVarsInScope, output_code + 1 + compositeCodeSize);
+        compositeCodeSize += 1 + sizeof(qword);
     }
+
+    cg->codeSize = compositeCodeSize;
+    return output_code;
 }
 
-void compileIfElse(struct CodeGenerator* cg, struct Node* node) {
-    int numJmpOutBackpatches;
-    int* jmpOutBackpatches = NULL;
+#define SIZE_OF_JMP_INS 9
+byte* compileIfElse(struct CodeGenerator* cg, struct Node* ifelStmt) {
+    int compositeCodeSize = 0;
+    byte* output_code = NULL;
 
-    for (int i = 0; i < node->as.IfEl->numBlocks; i++) {
-        compileNode(cg, node->as.IfEl->Conditions[i]);
-        int jmpNextBackpatch = cg->OutputCodeLen + 1;
+    int numBackpatches = 0;
+    qword* backpatches = NULL;
 
-        byte jmpNext_code[9];
-        jmpNext_code[0] = JPA_Z_OFF;
-        AppendCode(cg, jmpNext_code, 9);
+    /* Code Layout:
+     * <condition code>
+     * jpa z, <next condition>
+     * <block code>
+     * jp <end of all blocks>
+     * ...
+     */
+    for (int i = 0; i < ifelStmt->as.IfEl->numBlocks; i ++) {
+        byte* conditionCode = compileExpr(cg, ifelStmt->as.IfEl->Conditions[i]);
+        int conditionCodeSize = cg->codeSize;
 
-        compileBlock(cg, node->as.IfEl->Blocks[i]);
+        byte jpToNextCondition[SIZE_OF_JMP_INS];
+        jpToNextCondition[0] = JPA_Z_OFF;
 
-        numJmpOutBackpatches ++;
-        if (jmpOutBackpatches == NULL) {
-            jmpOutBackpatches = new_array(int, numJmpOutBackpatches);
+        byte* blockCode = compileBlock(cg, ifelStmt->as.IfEl->Blocks[i]);
+        int blockSize = cg->codeSize;
+
+        byte jpToEndOfBlocks[SIZE_OF_JMP_INS];
+        jpToEndOfBlocks[0] = JP_OFF;
+
+        int sizeOfThisBranch = conditionCodeSize + blockSize + (2*SIZE_OF_JMP_INS);
+        qword endingAddressOfThisBlock = cg->curAddress + sizeOfThisBranch;
+
+        /*Insert address to jpa z, <next condition> instruction*/
+        copyIntToByteArray(endingAddressOfThisBlock, jpToNextCondition + 1);
+
+        /* Make note of location to back pattch <end of all blocks> address
+         * when we know it
+         */
+        numBackpatches++;
+        if (backpatches == NULL) {
+            backpatches = new_array(qword, numBackpatches);
         } else {
-            expand_array(int, jmpOutBackpatches, numJmpOutBackpatches - 1, numJmpOutBackpatches);
+            expand_array(qword, backpatches, numBackpatches-1, numBackpatches);
         }
+        backpatches[i] = compositeCodeSize + sizeOfThisBranch - sizeof(qword);
 
-        jmpOutBackpatches[numJmpOutBackpatches-1] = cg->OutputCodeLen + 1;
+        //Insert code into output
+        if (output_code == NULL) {
+            output_code = new_array(byte, sizeOfThisBranch);
+        } else {
+            expand_array(byte, output_code, compositeCodeSize, compositeCodeSize + sizeOfThisBranch);
+        }
+        
+        byte* copyToAddr = output_code;
+        
+        memcpy(copyToAddr, conditionCode, conditionCodeSize);
+        copyToAddr += conditionCodeSize;
+        memcpy(copyToAddr, jpToNextCondition, SIZE_OF_JMP_INS);
+        copyToAddr += SIZE_OF_JMP_INS;
+        memcpy(copyToAddr, blockCode, blockSize);
+        copyToAddr += blockSize;
+        memcpy(copyToAddr, jpToEndOfBlocks, SIZE_OF_JMP_INS);
 
-        byte jmpOut_code[9];
-        jmpOut_code[0] = JP_OFF;
-        AppendCode(cg, jmpOut_code, 9);
+        compositeCodeSize += sizeOfThisBranch;
 
-        putIntInByteArray(cg->OutputCodeLen, cg->OutputCode + jmpNextBackpatch);
+        /* Cleanup */
+        free(blockCode);
+        free(conditionCode);
     }
 
-    if (node->as.IfEl->ElseBlock != NULL) {
-        compileBlock(cg, node->as.IfEl->ElseBlock);
+    if (ifelStmt->as.IfEl->ElseBlock != NULL) {
+        byte* elseBlock = compileBlock(cg, ifelStmt->as.IfEl->ElseBlock);
+        int elseBlockSize = cg->codeSize;
+
+        expand_array(byte, output_code, compositeCodeSize, compositeCodeSize+elseBlockSize);
+        memcpy(output_code+compositeCodeSize, elseBlock, elseBlockSize);
+
+        compositeCodeSize += elseBlockSize;
+        free(elseBlock);
     }
 
-    for (int i = 0; i < numJmpOutBackpatches; i++) {
-        putIntInByteArray(cg->OutputCodeLen, cg->OutputCode + jmpOutBackpatches[i]);
+    for (int i = 0; i < numBackpatches; i++) {
+        output_code[backpatches[i]] = cg->curAddress + compositeCodeSize;
     }
 
-    free(jmpOutBackpatches);
+    cg->codeSize = compositeCodeSize;
+    return output_code;
 }
 
-void compileWhile(struct CodeGenerator* cg, struct Node* n) {
-    if (n->as.While->isDoWhile) {
-        qword startOfLoop = cg->OutputCodeLen;
-        compileBlock(cg, n->as.While->Block);
-        compileNode(cg, n->as.While->Condition);
+byte* compileWhile(struct CodeGenerator* cg, struct Node* whileStmt) {
+    byte* blockCode = compileBlock(cg, whileStmt->as.While->Block);
+    int blockSize = cg->codeSize;
 
-        byte do_jmp[9];
-        do_jmp[0] = JPA_OFF;
-        putIntInByteArray(startOfLoop, do_jmp+1);
-        AppendCode(cg, do_jmp, 9);
+    byte* conditionCode = compileExpr(cg, whileStmt->as.While->Condition);
+    int conditionSize = cg->codeSize;
+
+    byte* jmpInstruction = new_array(byte, 1 + sizeof(qword));
+
+    byte* output_code = new_array(byte, blockSize + conditionSize + 1 + sizeof(qword));
+    if (whileStmt->as.While->isDoWhile) {
+        memcpy(output_code, blockCode, blockSize);
+        memcpy(output_code + blockSize, conditionCode, conditionSize);
+
+        jmpInstruction[0] = JPA_OFF;
+        copyIntToByteArray((uint64_t) cg->curAddress, jmpInstruction + 1);
+        memcpy(output_code + blockSize + conditionSize, jmpInstruction, 1 + sizeof(qword));
     } else {
-        compileNode(cg, n->as.While->Condition);
-        int backpatch = cg->OutputCodeLen + 1;
+        memcpy(output_code, conditionCode, conditionSize);
+    
+        jmpInstruction[0] = JPA_Z_OFF;
+        copyIntToByteArray((uint64_t) cg->curAddress + blockSize + 1 + sizeof(qword) + conditionSize, jmpInstruction + 1);
+        memcpy(output_code + conditionSize, jmpInstruction, 1 + sizeof(qword));
 
-        byte jmp[9];
-        jmp[0] = JPA_Z_OFF;
-        AppendCode(cg, jmp, 9);
-
-        compileBlock(cg, n->as.While->Block);
-        putIntInByteArray(cg->OutputCodeLen, cg->OutputCode + backpatch);
+        memcpy(output_code + conditionSize + 1 + sizeof(qword), blockCode, blockSize);
     }
+
+    free(blockCode);
+    free(conditionCode);
+    free(jmpInstruction);
+
+    cg->codeSize = conditionSize + blockSize + 1 + sizeof(qword);
+    return output_code;
 }
 
-void compileLet(struct CodeGenerator* cg, struct Node* n) {
-    compileNode(cg, n->as.Let->Value);
+byte* compileLet(struct CodeGenerator* cg, struct Node* letStmt) {
+    byte* output_code = compileExpr(cg, letStmt->as.Let->Value);
+    int codeSize = cg->codeSize;
 
-    byte ess[9];
-    ess[0] = ENSURE_STACK_SIZE;
-    putIntInByteArray(n->as.Let->StackLocation + 1, ess + 1);
-    AppendCode(cg, ess, 9);
+    expand_array(byte, output_code, codeSize, codeSize + 1 + sizeof(qword));
+    output_code[codeSize++] = ENSURE_STACK_SIZE;
+    copyIntToByteArray((uint64_t) letStmt->as.Let->StackLocation+1, output_code + codeSize);
+    codeSize += sizeof(qword);
 
-    byte insert[9];
-    insert[0] = INSERT_STACK_IMM_A;
-    putIntInByteArray(n->as.Let->StackLocation, insert + 1);
-    AppendCode(cg, insert, 9);
+    expand_array(byte, output_code, codeSize, codeSize + 1 + sizeof(qword));
+    output_code[codeSize++] = INSERT_STACK_IMM_A;
+    copyIntToByteArray((uint64_t) letStmt->as.Let->StackLocation, output_code + codeSize);
+    codeSize += sizeof(qword);
+
+    cg->codeSize = codeSize;
+    return output_code;
 }
 
-void compileIdent(struct CodeGenerator* cg, struct Node* n) {
-    byte output_code[9];
+byte* compileIdent(struct CodeGenerator* cg, struct Node* identStmt) {
+    byte* output_code = new_array(byte, 1 + sizeof(qword));
+
     output_code[0] = LDA_STACK_IMM;
-    putIntInByteArray(n->as.Ident->StackLocation, output_code + 1);
-    AppendCode(cg, output_code, 9);
-}
+    copyIntToByteArray((uint64_t) identStmt->as.Ident->StackLocation, output_code + 1);
 
-void compileAssign(struct CodeGenerator* cg, struct Node* n) {
-    compileNode(cg, n->as.Assign->Value);
-
-    byte insert[9];
-    insert[0] = INSERT_STACK_IMM_A;
-    putIntInByteArray(n->as.Assign->StackLocation, insert + 1);
-    AppendCode(cg, insert, 9);
+    cg->codeSize = 1 + sizeof(qword);
+    return output_code;
 }
