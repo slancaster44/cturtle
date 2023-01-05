@@ -34,6 +34,9 @@ struct Lexer newLexer(char* filename) {
     setPair(l.singleCharMap, "/", DIV_TT);
     setPair(l.singleCharMap, "*", MUL_TT);
     setPair(l.singleCharMap, ":", COLON_TT);
+    setPair(l.singleCharMap, ",", COMMA_TT);
+    setPair(l.singleCharMap, "[", LBRACK_TT);
+    setPair(l.singleCharMap, "]", RBRACK_TT);
     setPair(l.singleCharMap, "\n", EOS_TT);
 
     l.doubleCharMap = newMap();

@@ -44,6 +44,10 @@ enum TokenType {
     BOOL_AND_TT,
     NOT_TT,
 
+    COMMA_TT,
+    LBRACK_TT,
+    RBRACK_TT,
+
     TRUE_TT,
     FALSE_TT,
 };

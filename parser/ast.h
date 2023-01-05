@@ -15,6 +15,8 @@ enum NodeType {
     WHILE_NT,
     LET_NT,
     IDENT_NT,
+    ASSIGN_NT,
+    LIST_NT,
 };
 
 /* Type the node returns when evaluated */
@@ -51,6 +53,8 @@ struct Node {
         struct WhileNode* While;
         struct LetNode* Let;
         struct IdentifierNode* Ident;
+        struct ListNode* List;
+        struct AssignNode* Assign;
     } as;
 
     struct Token* tok;
@@ -110,6 +114,16 @@ struct LetNode {
 struct IdentifierNode {
     char* Identifier;
     long long StackLocation;
+};
+
+struct AssignNode {
+    struct Node* Value;
+    long long StackLocation;
+};
+
+struct ListNode {
+    struct Node** Values;
+    int numValues;
 };
 
 void deleteNode(struct Node* n);

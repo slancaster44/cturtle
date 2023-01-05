@@ -24,6 +24,8 @@ void parseDoWhile(struct Parser* p);
 void parseWhile(struct Parser* p);
 void parseIdent(struct Parser* p);
 void parseLet(struct Parser* p);
+void parseAssignment(struct Parser* p);
+void parseList(struct Parser* p);
 
 void parseInt(struct Parser* p);
 void parseFlt(struct Parser* p);
@@ -43,6 +45,7 @@ struct Parser newParser(char* filename) {
     memcpy(retVal.lex, &newLex, sizeof(struct Lexer));
 
     retVal.precMap = newMap();
+    setPair(retVal.precMap, "=", 5);
     setPair(retVal.precMap, "==", 2);
     setPair(retVal.precMap, "!=", 2);
     setPair(retVal.precMap, "||", 1);
@@ -152,6 +155,9 @@ void parsePrefix(struct Parser* p) {
     case IDENT_TT:
         parseIdent(p);
         break;
+    case LBRACK_TT:
+        parseList(p);
+        break;
     default:
         panic(p->curTok->line, 
             p->curTok->column, 
@@ -243,6 +249,9 @@ bool parseInfix(struct Parser* p) {
         return true;
     case BOOL_AND_TT:
         parseBinOp(p);
+        return true;
+    case EQ_TT:
+        parseAssignment(p);
         return true;
     default:
         return false;
@@ -492,5 +501,83 @@ void parseIdent(struct Parser* p) {
     result->as.Ident->Identifier = result->tok->Contents;
     setCurTok(p);
 
+    p->curNode = result;
+}
+
+/* Return value indicates list length
+ * you pass in the list pointer we will write to
+ */
+struct Node** parseCommaSeperatedList(struct Parser* p, int* count) {
+    (*count) = 0;
+    struct Node** outputList = NULL;
+
+    do {
+        if (p->curTok->Type == COMMA_TT) {
+            setCurTok(p);
+        }
+
+        prattParse(p, 0);
+        if (count == 0) {
+            outputList = new_array(struct Node*, 1);
+            outputList[0] = p->curNode;
+        } else {
+            expand_array(struct Node*, outputList, (*count), (*count)+1);
+            outputList[(*count)] = p->curNode;
+        }
+
+        (*count)++;
+
+    } while(p->curTok->Type == COMMA_TT);
+
+    return outputList;
+}
+
+void parseList(struct Parser* p) {
+    struct Node* result = new(struct Node);
+    result->tok = new(struct Token);
+    copyToken(result->tok, p->curTok);
+    result->nt = LIST_NT;
+    result->vt = newType(LIST_BT);
+    result->vt->subtype_info.ListEntryType = newType(NULL_BT);
+
+    setCurTok(p); /* Move over '[' */
+
+    result->as.List = new(struct ListNode);
+    result->as.List->Values = parseCommaSeperatedList(p, &result->as.List->numValues);
+
+    if (p->curTok->Type != RBRACK_TT) {
+        parser_panic(p, "Expected '[' got '%s'\n", p->curTok->Contents);
+    }
+    setCurTok(p);
+
+    p->curNode = result;
+}
+
+void parseAssignment(struct Parser* p) {
+    struct Node* Ident = p->curNode;
+    if (Ident->nt != IDENT_NT) {
+        parser_panic(p, "Expected identifier before '='\n");
+    }
+
+    struct Node* result = new(struct Node);
+    result->tok = new(struct Token);
+    copyToken(result->tok, p->curTok);
+    result->nt = ASSIGN_NT;
+    result->vt = newType(NULL_BT);
+
+
+    struct SymbolInfo* si = getVariable(p->PrimativeSymbols, Ident->as.Ident->Identifier);
+    if (si == NULL) {
+        parser_panic(p, "No such variable '%s'\n", p->curTok->Contents);
+    }
+
+    result->as.Assign = new(struct AssignNode);
+    result->as.Assign->StackLocation = si->StackLocation;
+
+    setCurTok(p); /* Move over '=' */
+    deleteNode(p->curNode);
+    prattParse(p, 0);
+
+    result->as.Assign->Value = p->curNode;
     p->curNode = result;
 }
