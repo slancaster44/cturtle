@@ -70,3 +70,12 @@ bool typesMatch(struct ValueType* v1, struct ValueType* v2) {
         return v1->base_type == v2->base_type;
     }
 }
+
+bool isTypeComplex(struct ValueType* v1) {
+    switch (v1->base_type) {
+    case LIST_BT:
+        return true;
+    default:
+        return false;
+    }
+}

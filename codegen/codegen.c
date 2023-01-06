@@ -21,6 +21,7 @@ void compileWhile(struct CodeGenerator* cg, struct Node* n);
 void compileLet(struct CodeGenerator* cg, struct Node* n);
 void compileIdent(struct CodeGenerator* cg, struct Node* n);
 void compileAssign(struct CodeGenerator* cg, struct Node* n);
+void compileList(struct CodeGenerator* cg, struct Node* n);
 
 struct CodeObj Compile(char* filename) {
     struct CodeGenerator cg;
@@ -105,6 +106,9 @@ void compileNode(struct CodeGenerator* cg, struct Node* n) {
         break;
     case ASSIGN_NT:
         compileAssign(cg, n);
+        break;
+    case LIST_NT:
+        compileList(cg, n);
         break;
     default:
         gen_panic(cg, "Could not generate code for '%s'\n", cg->parser.curNode->tok->Contents);
@@ -274,4 +278,76 @@ void compileAssign(struct CodeGenerator* cg, struct Node* n) {
     insert[0] = INSERT_STACK_IMM_A;
     putIntInByteArray(n->as.Assign->StackLocation, insert + 1);
     AppendCode(cg, insert, 9);
+}
+
+void compileList(struct CodeGenerator* cg, struct Node* n) {
+    if (isTypeComplex(n->vt->subtype_info.ListEntryType)) {
+        /* LDQBS 0
+         * LDRBS <sizeof_list>
+         * ALLOC BPA
+         * 
+         * PUSH BPA
+         * EVAL EXPR
+         * LDBPB BPA
+         * POP BPA
+         * LDM BPA[iter], BPB
+         */
+
+        byte ldqbs[9];
+        ldqbs[0] = LDQBS_IMM;
+        putIntInByteArray(0, ldqbs+1);
+        AppendCode(cg, ldqbs, 9);
+
+        byte ldrbs[9];
+        ldrbs[0] = LDRBS_IMM;
+        putIntInByteArray(n->as.List->numValues, ldrbs+1);
+        AppendCode(cg, ldrbs, 9);
+
+        byte alloc = ALLOC_BPA;
+        AppendCode(cg, &alloc, 1);
+
+        for (int i = 0; i < n->as.List->numValues; i++) {
+            byte push = PUSH_BPA;
+            AppendCode(cg, &push, 1);
+
+            compileNode(cg, n->as.List->Values[i]);
+
+            byte pop[2] = {LDBPB_BPA, POP_BPA};
+            AppendCode(cg, pop, 2);
+
+            byte ldm[9];
+            ldm[0] = LDM_BPAOFFIMM_BPB;
+            putIntInByteArray(i, ldm+1);
+            AppendCode(cg, ldm, 9);
+        }
+
+    } else {
+        /* LDQBS <sizeof_list>
+         * LDRBS 0
+         * ALLOC BPA
+         * EVAL EXPR
+         * LDM BPA[iter], a
+         */
+
+        byte ldqbs[9];
+        ldqbs[0] = LDQBS_IMM;
+        putIntInByteArray(n->as.List->numValues, ldqbs + 1);
+        AppendCode(cg, ldqbs, 9);
+
+        byte ldrbs[9];
+        ldrbs[0] = LDRBS_IMM;
+        putIntInByteArray(0, ldrbs+1);
+        AppendCode(cg, ldrbs, 9);
+
+        byte alloc = ALLOC_BPA;
+        AppendCode(cg, &alloc, 1);
+
+        for (int i = 0; i < n->as.List->numValues; i++) {
+            compileNode(cg, n->as.List->Values[i]);
+            byte ldm[9];
+            ldm[0] = LDM_BPAOFFIMM_A;
+            putIntInByteArray(i, ldm+1);
+            AppendCode(cg, ldm, 9);
+        }
+    }
 }

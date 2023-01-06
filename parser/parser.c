@@ -545,6 +545,15 @@ void parseList(struct Parser* p) {
     result->as.List = new(struct ListNode);
     result->as.List->Values = parseCommaSeperatedList(p, &result->as.List->numValues);
 
+    if (result->as.List->numValues != 0) {
+        result->vt->subtype_info.ListEntryType = result->as.List->Values[0]->vt; /*Todo: Copy?*/
+        
+        if (result->vt->subtype_info.ListEntryType->base_type == NULL_BT || 
+        result->vt->subtype_info.ListEntryType->base_type == INVALID_BT) {
+            parser_panic(p, "List cannot contain non-value\n");
+        }
+    }
+
     if (p->curTok->Type != RBRACK_TT) {
         parser_panic(p, "Expected '[' got '%s'\n", p->curTok->Contents);
     }

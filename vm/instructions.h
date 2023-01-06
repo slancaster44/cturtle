@@ -171,6 +171,9 @@ enum Opcode {
     LDBPB_BPAOFFA, //FI SI
     LDBPB_BPAOFFB, //FI SI
 
+    LDBPB_BPA,//
+    LDBPA_BPB,//
+
     LDBSFO,
     PUSH_BSFO,
     POP_BSFO,

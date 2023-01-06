@@ -41,6 +41,7 @@ struct ValueType {
 struct ValueType* newType(enum BaseType bt);
 void deleteType(struct ValueType* vt);
 bool typesMatch(struct ValueType* v1, struct ValueType* v2);
+bool isTypeComplex(struct ValueType* v1);
 
 struct Node {
     union {

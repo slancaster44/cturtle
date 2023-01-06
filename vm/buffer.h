@@ -80,6 +80,7 @@ struct Buffer* getBPA();
 struct Buffer* getBPB();
 void freeBPA();
 void freeBPB();
+void printBuffer(struct Buffer* b);
 
 /* Buffer Size Instructions */
 

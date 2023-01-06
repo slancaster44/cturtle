@@ -1,4 +1,5 @@
 #include "tdb.h"
+#include "buffer.h"
 #include "vm.h"
 #include "instructions.h"
 
@@ -50,6 +51,14 @@ void debugPrint(byte* code, int codelen) {
         break;
     case 'l':
         Decompile(code, codelen);
+        break;
+    case 'b':
+        printf("BPA: ");
+        printBuffer(getBPA());
+        printf("\n");
+        printf("BPB: ");
+        printBuffer(getBPB());
+        printf("\n");
         break;
     default:
         printf("Unknown command\n");
@@ -150,6 +159,37 @@ void Decompile(byte* code, int codelen) {
             break;
         case SHRINK_STACK_SIZE:
             printf("sss %hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case LDQBS_IMM:
+            printf("ldqbs %hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case LDRBS_IMM:
+            printf("ldrbs %hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case ALLOC_BPA:
+            printf("alloc bpa\n");
+            break;
+        case LDM_BPAOFFIMM_A:
+            printf("ldm bpa[%hhX], a\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case PUSH_BPA:
+            printf("push bpa\n");
+            break;
+        case POP_BPA:
+            printf("pop bpa\n");
+            break;
+        case LDBPB_BPA:
+            printf("ldbpb bpa\n");
+            break;
+        case LDBPA_BPB:
+            printf("ldbpa bpb\n");
+            break;
+        case LDM_BPAOFFIMM_BPB:
+            printf("ldm bpa[%hhX], bpb\n", code[i+1]);
             i += sizeof(qword);
             break;
         default:

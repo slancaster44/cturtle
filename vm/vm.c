@@ -23,6 +23,26 @@ byte* getPC() { return PC; }
 int getCodeLen() { return codelen; }
 byte* getCB() { return CB; }
 
+void printBuffer(struct Buffer* b) {
+    if (b == NULL)
+        return;
+
+    printf("[");
+    for (int i = 0; i < b->numQwords; i ++) {
+        printf("%llu", b->QwordBuffer[i]);
+        if (i != b->numQwords-1)
+            printf(", ");
+    }
+
+    for (int i = 0; i < b->numReferences; i++) {
+        printBuffer(b->References[i]);
+        if (i != b->numReferences-1)
+            printf(", ");
+    }
+
+    printf("]");
+}
+
 /* Helper macros & functions */
 #define decodeFirstReg(VAL) VAL >> 4
 #define decodeSecondReg(VAL) VAL & 0b00001111
@@ -450,6 +470,12 @@ int executeInstruction() {
             break;
         case LDA_STACK_IMM:
             Lda_Stack_Imm(getQwordImm());
+            break;
+        case LDBPB_BPA:
+            BPB = BPA;
+            break;
+        case LDBPA_BPB:
+            BPA = BPB;
             break;
         case BUILTIN:
             HandleBuiltin(getByteImm());
