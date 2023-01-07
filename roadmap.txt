@@ -1,16 +1,10 @@
 
-Let Statements
-    let <value> = <expression>
-
-Lists
-    [type]{<value, <value>}
-
-Garbage Collection
-
-Finish Buffer Instruction Set
+Lists in assignments
 
 Print Builtin
 Characters
+Strings
+
 
 For Loop Statements
     for <ident> in <list>
@@ -25,6 +19,8 @@ List Operators
     union
     append
 
+Garbage Collection
+
 Functions
     func <ident>(<type> <ident>, ...)
         ...
@@ -37,8 +33,6 @@ Structs
     end
 
 Floating Point Numbers
-
-Strings
 
 Fix Character & String Lexing
 

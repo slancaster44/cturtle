@@ -149,6 +149,12 @@ static inline void Insert_Stack_Imm_A(qword imm);
 static inline void Ensure_Stack_Size(qword imm);
 static inline void Lda_Stack_Imm(qword imm);
 
+static inline void Insert_Buffer_Stack_Imm_BPA(qword imm);
+static inline void Ensure_Buffer_Stack_Size(qword imm);
+static inline void Ldbpa_Stack_Imm(qword imm);
+
+
+
 /* Misc */
 static inline void HandleBuiltin(byte imm); //FI SI
 #endif

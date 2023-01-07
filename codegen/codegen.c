@@ -183,6 +183,11 @@ void compileBlock(struct CodeGenerator* cg, struct Block* b) {
         frame_code[0] = SHRINK_STACK_SIZE;
         putIntInByteArray(b->numPrimativeVarsInScope, frame_code+1);
         AppendCode(cg, frame_code, 9);
+    } if (b->numCompositeVarsInScope != 0) {
+        byte frame_code[9];
+        frame_code[0] = SHRINK_BUFFER_STACK_SIZE;
+        putIntInByteArray(b->numCompositeVarsInScope, frame_code+1);
+        AppendCode(cg, frame_code, 9);
     }
 }
 
@@ -253,29 +258,55 @@ void compileWhile(struct CodeGenerator* cg, struct Node* n) {
 void compileLet(struct CodeGenerator* cg, struct Node* n) {
     compileNode(cg, n->as.Let->Value);
 
-    byte ess[9];
-    ess[0] = ENSURE_STACK_SIZE;
-    putIntInByteArray(n->as.Let->StackLocation + 1, ess + 1);
-    AppendCode(cg, ess, 9);
+    if (isTypeComplex(n->as.Let->Value->vt)) {
+        byte ess[9];
+        ess[0] = ENSURE_BUFFER_STACK_SIZE;
+        putIntInByteArray(n->as.Let->StackLocation + 1, ess + 1);
+        AppendCode (cg, ess, 9);
+        
+        byte insert[9];
+        insert[0] = INSERT_BUFFER_STACK_IMM_BPA;
+        putIntInByteArray(n->as.Let->StackLocation, insert + 1);
+        AppendCode(cg, insert, 9);
 
-    byte insert[9];
-    insert[0] = INSERT_STACK_IMM_A;
-    putIntInByteArray(n->as.Let->StackLocation, insert + 1);
-    AppendCode(cg, insert, 9);
+    } else {
+        byte ess[9];
+        ess[0] = ENSURE_STACK_SIZE;
+        putIntInByteArray(n->as.Let->StackLocation + 1, ess + 1);
+        AppendCode(cg, ess, 9);
+
+        byte insert[9];
+        insert[0] = INSERT_STACK_IMM_A;
+        putIntInByteArray(n->as.Let->StackLocation, insert + 1);
+        AppendCode(cg, insert, 9);
+    }
 }
 
 void compileIdent(struct CodeGenerator* cg, struct Node* n) {
-    byte output_code[9];
-    output_code[0] = LDA_STACK_IMM;
-    putIntInByteArray(n->as.Ident->StackLocation, output_code + 1);
-    AppendCode(cg, output_code, 9);
+    if (isTypeComplex(n->vt)) {
+        byte output_code[9];
+        output_code[0] = LDBPA_STACK_IMM;
+        putIntInByteArray(n->as.Ident->StackLocation, output_code + 1);
+        AppendCode(cg, output_code, 9);
+
+    } else {
+        byte output_code[9];
+        output_code[0] = LDA_STACK_IMM;
+        putIntInByteArray(n->as.Ident->StackLocation, output_code + 1);
+        AppendCode(cg, output_code, 9);
+    }
 }
 
 void compileAssign(struct CodeGenerator* cg, struct Node* n) {
     compileNode(cg, n->as.Assign->Value);
-
     byte insert[9];
-    insert[0] = INSERT_STACK_IMM_A;
+
+    if (isTypeComplex(n->as.Assign->Value->vt)) {
+        insert[0] = INSERT_BUFFER_STACK_IMM_BPA;
+    } else {
+        insert[0] = INSERT_STACK_IMM_A;
+    }
+
     putIntInByteArray(n->as.Assign->StackLocation, insert + 1);
     AppendCode(cg, insert, 9);
 }

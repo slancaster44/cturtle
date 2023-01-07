@@ -158,22 +158,22 @@ void Decompile(byte* code, int codelen) {
             i += sizeof(qword);
             break;
         case SHRINK_STACK_SIZE:
-            printf("sss %hhX\n", code[i+1]);
+            printf("sss 0x%hhX\n", code[i+1]);
             i += sizeof(qword);
             break;
         case LDQBS_IMM:
-            printf("ldqbs %hhX\n", code[i+1]);
+            printf("ldqbs 0x%hhX\n", code[i+1]);
             i += sizeof(qword);
             break;
         case LDRBS_IMM:
-            printf("ldrbs %hhX\n", code[i+1]);
+            printf("ldrbs 0x%hhX\n", code[i+1]);
             i += sizeof(qword);
             break;
         case ALLOC_BPA:
             printf("alloc bpa\n");
             break;
         case LDM_BPAOFFIMM_A:
-            printf("ldm bpa[%hhX], a\n", code[i+1]);
+            printf("ldm bpa[0x%hhX], a\n", code[i+1]);
             i += sizeof(qword);
             break;
         case PUSH_BPA:
@@ -189,7 +189,23 @@ void Decompile(byte* code, int codelen) {
             printf("ldbpa bpb\n");
             break;
         case LDM_BPAOFFIMM_BPB:
-            printf("ldm bpa[%hhX], bpb\n", code[i+1]);
+            printf("ldm bpa[0x%hhX], bpb\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case ENSURE_BUFFER_STACK_SIZE:
+            printf("ebss 0x%hhX\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case INSERT_BUFFER_STACK_IMM_BPA:
+            printf("ldm buffer_stack[0x%hhX], bpa\n", code[i+1]);
+            i+= sizeof(qword);
+            break;
+        case LDBPA_STACK_IMM:
+            printf("ldbpa buffer_stack[0x%hhX]\n", code[i+1]);
+            i += sizeof(qword);
+            break;
+        case SHRINK_BUFFER_STACK_SIZE:
+            printf("sbss 0x%hhX\n", code[i+1]);
             i += sizeof(qword);
             break;
         default:

@@ -477,6 +477,21 @@ int executeInstruction() {
         case LDBPA_BPB:
             BPA = BPB;
             break;
+        case INSERT_BUFFER_STACK_IMM_BPA:
+            Insert_Buffer_Stack_Imm_BPA(getQwordImm());
+            break;
+        case ENSURE_BUFFER_STACK_SIZE:
+            Ensure_Buffer_Stack_Size(getQwordImm());
+            break;
+        case LDBPA_STACK_IMM:
+            Ldbpa_Stack_Imm(getQwordImm());
+            break;
+        case SHRINK_BUFFER_STACK_SIZE:
+            BSP -= getQwordImm();
+            break;
+        case SHRINK_STACK_SIZE:
+            SP -= getQwordImm();
+            break;
         case BUILTIN:
             HandleBuiltin(getByteImm());
             break;
@@ -1144,6 +1159,21 @@ static inline void Ensure_Stack_Size(qword imm) {
 
 static inline void Lda_Stack_Imm(qword imm) {
     REG_A = SB[imm];
+}
+
+static inline void Insert_Buffer_Stack_Imm_BPA(qword imm) {
+    BufferStack[imm] = BPA;
+}
+
+static inline void Ensure_Buffer_Stack_Size(qword imm) {
+    if (BSP < imm) {
+        ensureStackAccomodations(imm - BSP);
+        BSP += imm;
+    }
+}
+
+static inline void Ldbpa_Stack_Imm(qword imm) {
+    BPA = BufferStack[imm];
 }
 
 static inline void HandleBuiltin(byte imm) {

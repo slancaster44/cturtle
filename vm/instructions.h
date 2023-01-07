@@ -19,6 +19,11 @@ enum Opcode {
     INSERT_STACK_IMM_A, /* Stack[IMM] = A */
     LDA_STACK_IMM, /* A = Stack[IMM] */
     
+    ENSURE_BUFFER_STACK_SIZE,
+    SHRINK_BUFFER_STACK_SIZE,
+    INSERT_BUFFER_STACK_IMM_BPA,
+    LDBPA_STACK_IMM,
+
     PUSH_IMM,        /* (SP) <- Immediate64; SP++ */
     PUSH_A,          /* (SP) <- A; SP++  */
     PUSH_B,          /* (SP) <- B; SP++  */

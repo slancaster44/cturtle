@@ -69,6 +69,7 @@ struct Block {
 
     /* Number of variables in this block's private scope */
     int numPrimativeVarsInScope; //Used to pop stack frame
+    int numCompositeVarsInScope;
 };
 
 struct IntNode {

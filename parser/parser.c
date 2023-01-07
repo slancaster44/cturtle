@@ -305,6 +305,7 @@ struct Block* parseBlock(struct Parser* p, enum TokenType* terminators, int numT
     retVal->numStatements = 0;
 
     pushNewStackFrame(p->PrimativeSymbols);
+    pushNewStackFrame(p->CompositeSymbols);
 
     while (!in_tokenType(p->curTok->Type, terminators, numTerminators)) {
         retVal->numStatements++;
@@ -321,7 +322,9 @@ struct Block* parseBlock(struct Parser* p, enum TokenType* terminators, int numT
     }
 
     retVal->numPrimativeVarsInScope = numVarsInCurFrame(p->PrimativeSymbols);
+    retVal->numCompositeVarsInScope = numVarsInCurFrame(p->CompositeSymbols);
     popStackFrame(p->PrimativeSymbols);
+    popStackFrame(p->CompositeSymbols);
 
     return retVal;
 }
@@ -472,8 +475,15 @@ void parseLet(struct Parser* p) {
     result->as.Let->Value = p->curNode;
     struct SymbolInfo* si = new(struct SymbolInfo);
     si->Type = p->curNode->vt; /*TODO: Copy?*/
-    si->StackLocation = getStackOffSet(p->PrimativeSymbols); 
-    addVariable(p->PrimativeSymbols, result->as.Let->Identifier, si);
+
+    if (isTypeComplex(si->Type)) {
+        si->StackLocation = getStackOffSet(p->CompositeSymbols);
+        addVariable(p->CompositeSymbols, result->as.Let->Identifier, si);
+    } else {
+        si->StackLocation = getStackOffSet(p->PrimativeSymbols); 
+        addVariable(p->PrimativeSymbols, result->as.Let->Identifier, si);
+    }
+
     result->as.Let->StackLocation = si->StackLocation;
 
     p->curNode = result;
@@ -487,7 +497,10 @@ void parseIdent(struct Parser* p) {
 
     struct SymbolInfo* si = getVariable(p->PrimativeSymbols, p->curTok->Contents);
     if (si == NULL) {
-        parser_panic(p, "No such variable '%s'\n", p->curTok->Contents);
+        si = getVariable(p->CompositeSymbols, p->curTok->Contents);
+
+        if (si == NULL)
+            parser_panic(p, "No such variable '%s'\n", p->curTok->Contents);
     }
 
     result->vt = si->Type; /*TODO: Copy?*/
@@ -574,10 +587,13 @@ void parseAssignment(struct Parser* p) {
     result->nt = ASSIGN_NT;
     result->vt = newType(NULL_BT);
 
-
+    /*TODO: WHat happens if new 'let' reinits a composite var to primative? */
     struct SymbolInfo* si = getVariable(p->PrimativeSymbols, Ident->as.Ident->Identifier);
     if (si == NULL) {
-        parser_panic(p, "No such variable '%s'\n", p->curTok->Contents);
+        si = getVariable(p->CompositeSymbols, Ident->as.Ident->Identifier);
+
+        if (si == NULL)
+            parser_panic(p, "No such variable '%s'\n", Ident->as.Ident->Identifier);
     }
 
     result->as.Assign = new(struct AssignNode);
