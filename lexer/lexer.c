@@ -55,6 +55,7 @@ struct Lexer newLexer(char* filename) {
     setPair(l.keywordMap, "end", END_TT);
     setPair(l.keywordMap, "while", WHILE_TT);
     setPair(l.keywordMap, "do", DO_TT);
+    setPair(l.keywordMap, "print", BUILTIN_TT);
 
     return l;
 }
@@ -216,9 +217,43 @@ void numberTok(struct Lexer* l, struct Token* t) {
     t->Contents = curStr;
 }
 
+char getCharLiteral(struct Lexer* l, char terminator) {
+    char retVal = getc(l->fp);
+
+    if (retVal == terminator) {
+        ungetc(retVal, l->fp);
+        retVal = '\0';
+    } else if (retVal == '\\') {
+        char val = getc(l->fp);
+        if (val == terminator) {
+            retVal = terminator;
+            return retVal;
+        }
+
+        switch (val) {
+        case 'n':
+            retVal = '\n';
+            break;
+        case 't':
+            retVal = '\t';
+            break;
+        case '\\':
+            retVal = '\\';
+            break;
+        case 'r':
+            retVal = '\r';
+            break;
+        default:
+            lexer_panic(l, "Expected valid escape character");
+        }
+    }
+
+    return retVal;
+}
+
 void charTok(struct Lexer* l, struct Token* t) {
-    char* value = new_array(char, 2);
-    value[0] = getc(l->fp);
+    char* value = new_array(char, 2)
+    value[0] = getCharLiteral(l, '\'');
     value[1] = '\0';
     t->Type = CHAR_TT;
 
@@ -235,15 +270,19 @@ void strTok(struct Lexer* l, struct Token* t) {
 
     int location = 0;
     int curStrSize = 1;
-    char curChar = getc(l->fp);
-    while (curChar != '"' && !feof(l->fp)) {
+    char curChar = getCharLiteral(l, '"');
+    char boundsCheck = getc(l->fp);
+    while (boundsCheck != '"' && !feof(l->fp)) {
+        ungetc(boundsCheck, l->fp);
+
         curStr[location] = curChar;
 
         int oldSize = curStrSize ++;
         expand_array(char, curStr, oldSize, curStrSize);
 
         location ++;
-        curChar = getc(l->fp);
+        curChar = getCharLiteral(l, '"');
+        boundsCheck = getc(l->fp);
     }
 
     if (feof(l->fp)) {

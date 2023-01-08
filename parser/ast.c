@@ -55,7 +55,7 @@ void printNodeHelper(struct Node* n, char* tab, char ext) {
         printNodeHelper(n->as.Let->Value, completeTab, '\t');
         break;
     case LIST_NT:
-        printf("List:\n");
+        printf("List of length '%d':\n", n->as.List->numValues);
         for (int i = 0; i < n->as.List->numValues; i++) {
             printNodeHelper(n->as.List->Values[i], completeTab, '\t');
         }
@@ -67,6 +67,12 @@ void printNodeHelper(struct Node* n, char* tab, char ext) {
         printf("reassign at offset %lld\n", n->as.Assign->StackLocation);
         printf("%sValue:\n", completeTab);
         printNodeHelper(n->as.Assign->Value, completeTab, '\t');
+        break;
+    case BUILTIN_NT:
+        printf("Builtin '%s':\n", n->as.Builtin->builtinName);
+        for (int i = 0; i < n->as.Builtin->numArgs; i ++) {
+            printNodeHelper(n->as.Builtin->Args[i], completeTab, '\t');
+        }
         break;
     default:
         node_panic(n, "Could not print node\n");
@@ -136,6 +142,12 @@ void deleteNode(struct Node* n) {
     case ASSIGN_NT:
         free(n->as.Assign->Value);
         free(n->as.Assign);
+        break;
+    case BUILTIN_NT:
+        for (int i = 0; i < n->as.Builtin->numArgs; i++)
+            deleteNode(n->as.Builtin->Args[i]);
+        free(n->as.Builtin->builtinName);
+        free(n->as.Builtin);
         break;
     default:
         node_panic(n, "Could not free node of type '%d'\n", n->nt);

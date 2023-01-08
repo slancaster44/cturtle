@@ -1,5 +1,5 @@
 CC := gcc
-CCFLAGS := -g -O3
+CCFLAGS := -g #-O3
 LINK := -lm  -Icommon #-lefence 
 
 VM_SRC := vm/vm.c

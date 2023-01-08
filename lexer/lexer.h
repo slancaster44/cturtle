@@ -50,6 +50,8 @@ enum TokenType {
 
     TRUE_TT,
     FALSE_TT,
+
+    BUILTIN_TT,
 };
 
 struct Token {

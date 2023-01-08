@@ -26,6 +26,9 @@ void parseIdent(struct Parser* p);
 void parseLet(struct Parser* p);
 void parseAssignment(struct Parser* p);
 void parseList(struct Parser* p);
+void parseString(struct Parser* p);
+
+void parseBuiltin(struct Parser* p);
 
 void parseInt(struct Parser* p);
 void parseFlt(struct Parser* p);
@@ -34,6 +37,7 @@ void parseBool(struct Parser* p);
 
 void parseBinOp(struct Parser* p);
 struct ValueType* CheckTypeBinOp(struct Parser* p, char* op, struct ValueType* lhs_type, struct ValueType* rhs_type);
+struct SymbolInfo* lookupVariable(struct Parser* p);
 
 /********/
 
@@ -157,6 +161,12 @@ void parsePrefix(struct Parser* p) {
         break;
     case LBRACK_TT:
         parseList(p);
+        break;
+    case STR_TT:
+        parseString(p);
+        break;
+    case BUILTIN_TT:
+        parseBuiltin(p);
         break;
     default:
         panic(p->curTok->line, 
@@ -575,6 +585,34 @@ void parseList(struct Parser* p) {
     p->curNode = result;
 }
 
+void parseString(struct Parser* p) {
+    struct Node* result = new(struct Node);
+    result->tok = new(struct Token);
+    copyToken(result->tok, p->curTok);
+    result->nt = LIST_NT;
+    result->vt = newType(LIST_BT);
+    result->vt->subtype_info.ListEntryType = newType(CHR_BT);
+
+    result->as.List = new(struct ListNode);
+
+    result->as.List->numValues = strlen(p->curTok->Contents);
+    result->as.List->Values = new_array(struct Node*, result->as.List->numValues);
+    for (int i = 0; i < result->as.List->numValues; i ++) {
+        struct Node* curChar = new(struct Node);
+        curChar->tok = new(struct Token);
+        curChar->nt = CHR_NT;
+        copyToken(curChar->tok, p->curTok);
+        curChar->vt = newType(CHR_BT);
+
+        curChar->as.Chr = new(struct ChrNode);
+        curChar->as.Chr->Value = p->curTok->Contents[i];
+        result->as.List->Values[i] = curChar;
+    }
+
+    setCurTok(p);
+    p->curNode = result;
+}
+
 void parseAssignment(struct Parser* p) {
     struct Node* Ident = p->curNode;
     if (Ident->nt != IDENT_NT) {
@@ -604,5 +642,32 @@ void parseAssignment(struct Parser* p) {
     prattParse(p, 0);
 
     result->as.Assign->Value = p->curNode;
+    p->curNode = result;
+}
+
+void parseBuiltin(struct Parser* p) {
+    struct Node* result = new(struct Node);
+    result->tok = new(struct Token);
+    copyToken(result->tok, p->curTok);
+    result->nt = BUILTIN_NT;
+    result->vt = newType(NULL_BT);
+
+    result->as.Builtin = new(struct BuiltinNode);
+    result->as.Builtin->builtinName = new_array(char, strlen(p->curTok->Contents) + 1);
+    strcpy(result->as.Builtin->builtinName, p->curTok->Contents);
+
+    setCurTok(p);
+    if (p->curTok->Type != LPAREN_TT) {
+        parser_panic(p, "Expected '(', got '%s'\n", p->curTok->Contents);
+    }
+    setCurTok(p);
+
+    result->as.Builtin->Args = parseCommaSeperatedList(p, &result->as.Builtin->numArgs);
+
+    if (p->curTok->Type != RPAREN_TT) {
+        parser_panic(p, "Expected, ')', got '%s'\n", p->curTok->Contents);
+    }
+    setCurTok(p);
+
     p->curNode = result;
 }

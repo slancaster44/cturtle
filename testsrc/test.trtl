@@ -1,5 +1,2 @@
-
-if true:
-    let a = 10
-    let b = [11]
-end
+let message = "Hello, World!\n"
+print(message)

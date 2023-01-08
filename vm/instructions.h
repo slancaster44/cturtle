@@ -247,6 +247,8 @@ enum Builtins {
     PRINT_HEX_A,
     PRINT_ASCII_B,
     PRINT_HEX_B,
+    PRINT_BPA,
+    PRINT_ASCII_BPA,
     DUMP_REGS,
 };
 

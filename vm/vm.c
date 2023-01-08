@@ -1193,6 +1193,14 @@ static inline void HandleBuiltin(byte imm) {
     case DUMP_REGS:
         printRegs();
         break;
+    case PRINT_ASCII_BPA:
+        for (int i = 0; i < BPA->numQwords; i ++) {
+            printf("%c", (char) BPA->QwordBuffer[i]);
+        }
+        break;
+    case PRINT_BPA:
+        printBuffer(BPA);
+        break;
     default:
         printf("Unrecognized Builtin Call %d", imm);
         exit(1);

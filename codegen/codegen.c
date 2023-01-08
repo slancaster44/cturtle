@@ -14,6 +14,7 @@
 void AppendCode(struct CodeGenerator* cg, byte* code, int codelen);
 void compileNode(struct CodeGenerator* cg, struct Node* n);
 void compileInt(struct CodeGenerator* cg, struct Node* IntNode);
+void compileChar(struct CodeGenerator* cg, struct Node* n);
 void compileBool(struct CodeGenerator* cg, struct Node* BoolNode);
 void compileBinOp(struct CodeGenerator* cg, struct Node* node);
 void compileIfElse(struct CodeGenerator* cg, struct Node* node);
@@ -22,6 +23,7 @@ void compileLet(struct CodeGenerator* cg, struct Node* n);
 void compileIdent(struct CodeGenerator* cg, struct Node* n);
 void compileAssign(struct CodeGenerator* cg, struct Node* n);
 void compileList(struct CodeGenerator* cg, struct Node* n);
+void compileBuiltin(struct CodeGenerator* cg, struct Node* n);
 
 struct CodeObj Compile(char* filename) {
     struct CodeGenerator cg;
@@ -110,6 +112,12 @@ void compileNode(struct CodeGenerator* cg, struct Node* n) {
     case LIST_NT:
         compileList(cg, n);
         break;
+    case CHR_NT:
+        compileChar(cg, n);
+        break;
+    case BUILTIN_NT:
+        compileBuiltin(cg, n);
+        break;
     default:
         gen_panic(cg, "Could not generate code for '%s'\n", cg->parser.curNode->tok->Contents);
     }
@@ -123,6 +131,13 @@ void compileInt(struct CodeGenerator* cg, struct Node* IntNode) {
     byte code[9];
     code[0] = LDA_IMM;
     putIntInByteArray(IntNode->as.Int->Value, code+1);
+    AppendCode(cg, code, 9);
+}
+
+void compileChar(struct CodeGenerator* cg, struct Node* n) {
+    byte code[9];
+    code[0] = LDA_IMM;
+    putIntInByteArray((qword) (n->as.Chr->Value), code+1);
     AppendCode(cg, code, 9);
 }
 
@@ -380,5 +395,35 @@ void compileList(struct CodeGenerator* cg, struct Node* n) {
             putIntInByteArray(i, ldm+1);
             AppendCode(cg, ldm, 9);
         }
+    }
+}
+
+void compilePrint(struct CodeGenerator* cg, struct Node* n) {
+    for (int i = 0; i < n->as.Builtin->numArgs; i++) {
+        struct Node* thisNode = n->as.Builtin->Args[i];
+
+        byte code[2];
+        code[0] = BUILTIN;
+
+        compileNode(cg, thisNode);
+        if (thisNode->vt->base_type == LIST_BT && thisNode->vt->subtype_info.ListEntryType->base_type == CHR_BT) {
+            code[1] = PRINT_ASCII_BPA;
+        } else if (isTypeComplex(thisNode->vt)) {
+            code[1] = PRINT_BPA;
+        } else if (thisNode->vt->base_type == CHR_BT) {
+            code[1] = PRINT_ASCII_A;
+        } else {
+            code[1] = PRINT_HEX_A;
+        }
+
+        AppendCode(cg, code, 2);
+    }
+}
+
+void compileBuiltin(struct CodeGenerator* cg, struct Node* n) {
+    if (!strcmp("print", n->as.Builtin->builtinName)) {
+        compilePrint(cg, n);
+    } else {
+        gen_panic(cg, "Invalid builtin '%s'\n", n->as.Builtin->builtinName);
     }
 }

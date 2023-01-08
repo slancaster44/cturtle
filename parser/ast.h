@@ -17,6 +17,7 @@ enum NodeType {
     IDENT_NT,
     ASSIGN_NT,
     LIST_NT,
+    BUILTIN_NT,
 };
 
 /* Type the node returns when evaluated */
@@ -56,6 +57,7 @@ struct Node {
         struct IdentifierNode* Ident;
         struct ListNode* List;
         struct AssignNode* Assign;
+        struct BuiltinNode* Builtin;
     } as;
 
     struct Token* tok;
@@ -126,6 +128,12 @@ struct AssignNode {
 struct ListNode {
     struct Node** Values;
     int numValues;
+};
+
+struct BuiltinNode {
+    char* builtinName;
+    int numArgs;
+    struct Node** Args;
 };
 
 void deleteNode(struct Node* n);

@@ -1,13 +1,11 @@
-
-Lists in assignments
-
-Print Builtin
 Characters
 Strings
 
+Print Builtin
+
 
 For Loop Statements
-    for <ident> in <list>
+    foreach <ident> in <list>
         ...
     end
 
