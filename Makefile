@@ -39,7 +39,7 @@ LEXER_HDR := lexer/lexer.h hash/hash.h
 LEXER_TARGET := lexer/lexer_test
 
 lexer_build_test:
-	$(CC) $(CCFLAGS) -Ihash $(LEXER_HDR) $(LEXER_SRC) lexer/test.c
+	$(CC) $(CCFLAGS) -Ihash -Icommon $(LEXER_HDR) $(LEXER_SRC) lexer/test.c 
 	@rm -rf lexer/*.gch lexer/*.o lexer/*.out lexer/*.so
 	@mv a.out $(LEXER_TARGET)
 

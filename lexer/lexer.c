@@ -271,9 +271,7 @@ void strTok(struct Lexer* l, struct Token* t) {
     int location = 0;
     int curStrSize = 1;
     char curChar = getCharLiteral(l, '"');
-    char boundsCheck = getc(l->fp);
-    while (boundsCheck != '"' && !feof(l->fp)) {
-        ungetc(boundsCheck, l->fp);
+    while (curChar != '\0' && !feof(l->fp)) {
 
         curStr[location] = curChar;
 
@@ -282,10 +280,9 @@ void strTok(struct Lexer* l, struct Token* t) {
 
         location ++;
         curChar = getCharLiteral(l, '"');
-        boundsCheck = getc(l->fp);
     }
 
-    if (feof(l->fp)) {
+    if (getc(l->fp) != '"') {
         lexer_panic(l, "Expected closing quote\n");
     }
 

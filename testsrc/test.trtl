@@ -1,2 +1,6 @@
-let message = "Hello, World!\n"
-print(message)
+
+if true:
+    print("True")
+else
+    print("False")
+end

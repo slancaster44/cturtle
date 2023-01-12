@@ -593,9 +593,10 @@ void parseString(struct Parser* p) {
     result->vt = newType(LIST_BT);
     result->vt->subtype_info.ListEntryType = newType(CHR_BT);
 
+
     result->as.List = new(struct ListNode);
 
-    result->as.List->numValues = strlen(p->curTok->Contents);
+    result->as.List->numValues = strlen(p->curTok->Contents) + 1;
     result->as.List->Values = new_array(struct Node*, result->as.List->numValues);
     for (int i = 0; i < result->as.List->numValues; i ++) {
         struct Node* curChar = new(struct Node);

@@ -207,7 +207,7 @@ void compileBlock(struct CodeGenerator* cg, struct Block* b) {
 }
 
 void compileIfElse(struct CodeGenerator* cg, struct Node* node) {
-    int numJmpOutBackpatches;
+    int numJmpOutBackpatches = 0;
     int* jmpOutBackpatches = NULL;
 
     for (int i = 0; i < node->as.IfEl->numBlocks; i++) {

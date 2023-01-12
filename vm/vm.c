@@ -29,7 +29,7 @@ void printBuffer(struct Buffer* b) {
 
     printf("[");
     for (int i = 0; i < b->numQwords; i ++) {
-        printf("%llu", b->QwordBuffer[i]);
+        printf("%lu", b->QwordBuffer[i]);
         if (i != b->numQwords-1)
             printf(", ");
     }

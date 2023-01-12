@@ -13,8 +13,8 @@
 
 #include "common_types.h"
 
-#define MAGIC_NUMBER_WIDTH 12
-#define MAGIC_NUMBER "#!/bin/tvm \n"
+#define MAGIC_NUMBER_WIDTH 10
+#define MAGIC_NUMBER "#!/bin/tvm"
 
 struct TurtleBinary {
     byte* MagicNumber;

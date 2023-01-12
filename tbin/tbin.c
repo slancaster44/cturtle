@@ -9,7 +9,7 @@ struct TurtleBinary* newBinary() {
     struct TurtleBinary* tb = new(struct TurtleBinary);
     
     tb->MagicNumber = new_array(byte, MAGIC_NUMBER_WIDTH);
-    memcpy(tb->MagicNumber, (byte*) MAGIC_NUMBER, MAGIC_NUMBER_WIDTH);
+    memcpy(tb->MagicNumber, MAGIC_NUMBER, MAGIC_NUMBER_WIDTH);
 
     tb->codelen = 0;
     tb->code = NULL;
@@ -59,13 +59,14 @@ struct TurtleBinary* readTurtleFile(char* filename) {
     struct TurtleBinary* retVal = newBinary();
 
     FILE* fp = fopen(filename, "r");
-    char magic[MAGIC_NUMBER_WIDTH];
+    char magic[MAGIC_NUMBER_WIDTH+1];
 
     for (int i = 0; i < MAGIC_NUMBER_WIDTH; i ++) {
         magic[i] = getc(fp);
     }
-    
-    if (!strcmp(magic, MAGIC_NUMBER)) {
+    magic[MAGIC_NUMBER_WIDTH] = '\0';
+
+    if (strcmp(magic, MAGIC_NUMBER) != 0) {
         printf("Invalid Magic Number\n");
         exit(1);
     }

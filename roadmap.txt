@@ -1,9 +1,3 @@
-Characters
-Strings
-
-Print Builtin
-
-
 For Loop Statements
     foreach <ident> in <list>
         ...
